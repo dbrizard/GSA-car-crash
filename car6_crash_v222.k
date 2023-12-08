@@ -80,7 +80,7 @@ $#     src       srp        fs        vp
        0.0       0.0       0.0       0.0
 *HOURGLASS
 $#    hgid       ihq        qm       ibq        q1        q2    qb/vdc        qw
-         1         4      0.05         0       0.0       0.0       0.0       0.0
+         1         4      0.02         0       0.0       0.0       0.0       0.0
 *PART
 $#                                                                         title
 Bumper
@@ -98,7 +98,7 @@ $#     src       srp        fs        vp
        0.0       0.0       0.0       0.0
 *HOURGLASS
 $#    hgid       ihq        qm       ibq        q1        q2    qb/vdc        qw
-         2         4      0.05         0       0.0       0.0       0.0       0.0
+         2         4      0.02         0       0.0       0.0       0.0       0.0
 *PART
 $#                                                                         title
 Hood
@@ -116,7 +116,7 @@ $#     src       srp        fs        vp
        0.0       0.0       0.0       0.0
 *HOURGLASS
 $#    hgid       ihq        qm       ibq        q1        q2    qb/vdc        qw
-         3         4      0.05         0       0.0       0.0       0.0       0.0
+         3         4      0.02         0       0.0       0.0       0.0       0.0
 *PART
 $#                                                                         title
 Grill
@@ -134,7 +134,7 @@ $#     src       srp        fs        vp
        0.0       0.0       0.0       0.0
 *HOURGLASS
 $#    hgid       ihq        qm       ibq        q1        q2    qb/vdc        qw
-         4         4      0.05         0       0.0       0.0       0.0       0.0
+         4         4      0.02         0       0.0       0.0       0.0       0.0
 *PART
 $#                                                                         title
 Longeron (front)
@@ -152,7 +152,7 @@ $#     src       srp        fs        vp
        0.0       0.0       0.0       0.0
 *HOURGLASS
 $#    hgid       ihq        qm       ibq        q1        q2    qb/vdc        qw
-         5         4      0.05         0       0.0       0.0       0.0       0.0
+         5         4      0.02         0       0.0       0.0       0.0       0.0
 *PART
 $#                                                                         title
 Longeron (rear)
@@ -170,7 +170,7 @@ $#     src       srp        fs        vp
        0.0       0.0       0.0       0.0
 *HOURGLASS
 $#    hgid       ihq        qm       ibq        q1        q2    qb/vdc        qw
-         6         4      0.05         0       0.0       0.0       0.0       0.0
+         6         4      0.02         0       0.0       0.0       0.0       0.0
 *PART
 $#                                                                         title
 Roof
@@ -188,27 +188,7 @@ $#     src       srp        fs        vp
        0.0       0.0       0.0       0.0
 *HOURGLASS
 $#    hgid       ihq        qm       ibq        q1        q2    qb/vdc        qw
-         7         4      0.05         0       0.0       0.0       0.0       0.0
-*PART
-$#                                                                         title
-Post
-$#     pid     secid       mid     eosid      hgid      grav    adpopt      tmid
-         8         8         8         0         8         0         0         0
-*SECTION_SHELL
-$#   secid    elform      shrf       nip     propt   qr/irid     icomp     setyp
-         8         2       0.0         0       1.0         0         0         1
-$#      t1        t2        t3        t4      nloc     marea      idof    edgset
-       0.0       0.0       0.0       0.0       0.0       0.0       0.0         0
-*MAT_RIGID
-$#     mid        ro         e        pr         n    couple         m     alias
-         87.80000E-8  200000.0       0.3       0.0       0.0       0.0          
-$#     cmo      con1      con2    
-       1.0         7         7
-$#lco or a1        a2        a3        v1        v2        v3  
-       0.0       0.0       0.0       0.0       0.0       0.0
-*HOURGLASS
-$#    hgid       ihq        qm       ibq        q1        q2    qb/vdc        qw
-         8         0       0.0         0       0.0       0.0       0.0       0.0
+         7         4      0.02         0       0.0       0.0       0.0       0.0
 $
 $ INITIAL CONDITIONS
 $

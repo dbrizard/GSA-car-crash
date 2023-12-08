@@ -14,7 +14,11 @@
   - IHQ=4 et QM=0.05 sur toutes les parts => max HE=4e6
   - adjust QM?
 * [x] post mesh removed (served only for visualisation)
-
+* [ ] QM study
+  - QM=0.02 for all parts (hourglass visible on hood)
+  - QM=0.02 for all parts, but 0.05 for body
+  - QM=0.02 for all parts, but 0.02 for bumper
+  - __QM=0.02 for all parts seems to be better__
 
 
 # MODEL OUTPUT
