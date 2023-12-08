@@ -17,6 +17,11 @@ Initial velocity along x axis is -15640.0 mm/s (56km/h).
 9. rigid cylinder
 10. rigid plane
 
+The hood is attached to the grill by 1 node and to the body by 2 nodes 
+(`*CONSTRAINED_GENERALIZED_WELD_SPOT` without failure).
+
+### Materials
+
 
 ## Origin of model
 This simplified car model was taken from LS-OPT exemples 

@@ -3,7 +3,7 @@
 * shorter elements in the length of the right rail
 * refined connection front/rear rail. 
 * [x] il reste 2 éléments à diviser...
-* [ ] better hourglass control is required ?
+* [x] better hourglass control is required ? YES
   - HE/TE=2.32e7/4.83e8 at the end
   - HE/IE=2.32e7/1.07e8 at the end
   - highest HE: body > bumper > hood
@@ -12,7 +12,8 @@
   - IHQ=0 et QM=0.05 sur les 3 premières parts => HE=2.01e7
   - IHQ=4 et QM=0.05 sur les 3 premières parts => HE=9.67e6
   - IHQ=4 et QM=0.05 sur toutes les parts => max HE=4e6
-
+  - adjust QM?
+* [x] post mesh removed (served only for visualisation)
 
 
 
@@ -32,6 +33,7 @@
 
 
 # MODEL MODIFICATION
-## longeron
-- [ ] Déformation locale avec initiateur
+
+- [ ] Déformation locale longeron avec initiateur
+
 
