@@ -44,3 +44,8 @@ Y location of `*RIGIDWALL_GEOMETRIC_CYLINDER_ID` :
 - center: 660.0;
 - left:   209.752 (centered on the axis of the left longeron);
 - right: 1187.31  (centered on the axis of the right longeron).
+
+## Accelerate computations
+
+- reduce DT for D3PLOT file writing does not change 
+- NCPU=4 seems better than NCPU=8....
