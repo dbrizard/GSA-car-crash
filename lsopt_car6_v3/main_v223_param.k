@@ -1,8 +1,8 @@
 *KEYWORD
 *PARAMETER
-rtbumper,2,rtrailb,3,rtrailf,7,rtgrill,0.833333
-rthood,1.5,rybumper,500,ryrailf,300,ryrailb,366.667
-rybody,433.333
+rtbumper,2.66667,rtrailb,2.33333,rtrailf,3,rtgrill,0.5
+rthood,0.5,rybumper,500,ryrailf,300,ryrailb,300
+rybody,366.667
 *INCLUDE
 car6_crash_v223.k
 *END
