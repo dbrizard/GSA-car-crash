@@ -461,12 +461,22 @@ class CAR6model(LSDYNAmodel):
         :param str meth: GSA method ('morris')
         """
         # Define parameters and bounds
-        problem = {'names': ['tbumper', 'troof', 'trailb', 'trailf', 'tgrill', 'thood'],
-                   'num_vars': 6,
-                   'bounds': [[2, 4], [1, 3], [1,3], [3,7], [0.5,1.5], [0.5, 1.5]],
-                   # 'groups': ['G1', 'G2', 'G1'], # Sobol and Morris only. See Advanced Examples.
-                   # 'dists': ['unif', 'lognorm', 'triang']
-                   }
+        if self.kfile['basename']=='main_v222.k':
+            problem = {'names': ['tbumper', 'troof', 'trailb', 'trailf', 'tgrill', 'thood'],
+                       'num_vars': 6,
+                       'bounds': [[2, 4], [1, 3], [1,3], [3,7], [0.5,1.5], [0.5, 1.5]],
+                       # 'groups': ['G1', 'G2', 'G1'], # Sobol and Morris only. See Advanced Examples.
+                       # 'dists': ['unif', 'lognorm', 'triang']
+                       }
+        elif self.kfile['basename']=='main_v223.k':
+            problem = {'names': ['tbumper', 'trailb', 'trailf', 'tgrill', 'thood',
+                                 'ybumper', 'yrailf', 'yrailb', 'ybody'],
+                       'num_vars': 9,
+                       'bounds': [[2, 4], [1,3], [3,7], [0.5,1.5], [0.5, 1.5],
+                                  [300, 500], [300, 500], [300, 500], [300, 500]],
+                       # 'groups': ['G1', 'G2', 'G1'], # Sobol and Morris only. See Advanced Examples.
+                       # 'dists': ['unif', 'lognorm', 'triang']
+                       }            
                 
         # Generate samples
         print("="*50)
@@ -589,7 +599,7 @@ if __name__=="__main__":
     
     
     #%% TEST CAR6model CLASS
-    if True:
+    if False:
         CAR = CAR6model('./lsopt_car6_v2/main_v222.k', param)
         CAR.run(compute=True)
         CAR.fetchMATSUM()
@@ -598,8 +608,8 @@ if __name__=="__main__":
         CAR.plotGLSTAT()
         CAR.fetchSimulationResults()
         
-        CAR.runGSA(N=5, meth='morris')
-        CAR.plotGSAmorris()
+        # CAR.runGSA(N=5, meth='morris')
+        # CAR.plotGSAmorris()
         
         # CAR.runGSA(N=128, meth='sobol')
         # CAR.plotGSA('sobol')
@@ -611,3 +621,8 @@ if __name__=="__main__":
     # with open('CAR_sobol_n128.pickle', 'wb') as f:
     # # Pickle the 'data' dictionary using the highest protocol available.
     #     pickle.dump(CAR, f, pickle.HIGHEST_PROTOCOL)
+    
+    if True:
+        CAR = CAR6model('./lsopt_car6_v3/main_v223.k', param)
+        CAR.runGSA(N=5, meth='morris')
+        CAR.plotGSAmorris()
