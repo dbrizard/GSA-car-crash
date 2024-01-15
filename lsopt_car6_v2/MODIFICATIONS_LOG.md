@@ -19,7 +19,9 @@
   - QM=0.02 for all parts, but 0.05 for body
   - QM=0.02 for all parts, but 0.02 for bumper
   - __QM=0.02 for all parts seems to be better__
-
+* Try to get better changes in model outputs
+  - reduce velocity from 56 to 30km/h
+  - increase computation time from 50ms to 80ms
 
 # MODEL OUTPUT
 ## Nodout
@@ -34,7 +36,8 @@
   - 2: geometric cylinder
 * transducer: cycle, x_force, y_force, z_force
 
-
+## Energy
+* watch internal energy ??
 
 # MODEL MODIFICATION
 

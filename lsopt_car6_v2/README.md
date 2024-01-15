@@ -3,7 +3,9 @@
 The car is 1397mm wide, 1397mm high and 4318mm long. 
 The total mass is around 500kg (depending on the thicknesses of the parts).
 
-Initial velocity along x axis is -15640.0 mm/s (56km/h).
+Initial velocity along x axis is -15640.0 mm/s (56km/h). 50ms simulation time
+Initial velocity along x axis is -8333.0 mm/s (30km/h). 80ms simulation time
+
 
 ### List of parts
 1. body
@@ -13,14 +15,29 @@ Initial velocity along x axis is -15640.0 mm/s (56km/h).
 5. longeron (front)
 6. longeron (rear)
 7. roof
-8. post
-9. rigid cylinder
-10. rigid plane
+8. post (rigid cylinder)
+9. ground (rigid plane)
 
 The hood is attached to the grill by 1 node and to the body by 2 nodes 
 (`*CONSTRAINED_GENERALIZED_WELD_SPOT` without failure).
 
 ### Materials
+
+### Model outputs
+
+The final velocity is taken as the last *X-rigid body velocity* of the body (part #1) in MATSUM. 
+Indeed, GLSTAT *global_x_velocity* is far from the final velocity.
+Order of magnitude: 6000
+
+The maximum force transmitted to the post (RWFORC, *x_force*). 
+The post is RigidWall #2 (RigidWall #1 is the ground).
+Order of magnitude: 5e5
+
+GLSTAT, *internal_energy*. 
+Order of magnitude: 5e7
+
+The final *x_displacement* of the car, taken at node 605 (rear body).
+Order of magnitude: 500
 
 
 ## Origin of model
