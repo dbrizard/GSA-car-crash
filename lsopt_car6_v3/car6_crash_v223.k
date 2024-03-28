@@ -9,7 +9,7 @@ $#    hgen      rwen    slnten     rylen     irgen
          2         2         2         1         2
 *CONTROL_TERMINATION
 $#  endtim    endcyc     dtmin    endeng    endmas     nosol     
-      0.08         0       0.0       0.0       0.0         0
+      0.20        0       0.0       0.0       0.0         0
 *DATABASE_GLSTAT
 $#      dt    binary      lcur     ioopt     
 1.00000E-5         2         0         1
@@ -62,7 +62,7 @@ $#  penmax    thkopt    shlthk     snlog      isym     i2d3d    sldthk    sldstf
 $#     sid       da1       da2       da3       da4    solver      
          1       0.0       0.0       0.0       0.0MECH
 $#    pid1      pid2      pid3      pid4      pid5      pid6      pid7      pid8
-         1         2         3         4         0         0         0         0
+         1         2         3         4         5         0         0         0
 *PART
 $#                                                                         title
 Body
