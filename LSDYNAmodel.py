@@ -400,6 +400,8 @@ class CAR6model(LSDYNAmodel):
         """
         self.partList = ('Body', 'Bumper', 'Hood', 'Grill', 'Longeron (front)',
                          'Longeron (rear)', 'Roof', 'Post', 'Ground')
+        
+        self.out_units = {'fmax':'N', 'dmax':'mm', 'vfin':'mm/s', 'IE':'N.mm'}
     
     
     def fetchSimulationResults(self):
@@ -443,7 +445,7 @@ class CAR6model(LSDYNAmodel):
         """
         out = {'fmax':max(self.RWFORC['x_force'][:,1]),  # force max sur poteau
                # 'dmax':self.NODOUT['x_displacement'][-1, 1] - self.NODOUT['x_displacement'][-1, 3],  # enfoncement maxi
-               'dmax':self.NODOUT['x_displacement'][-1, 4],
+               'dmax':self.NODOUT['x_displacement'][-1, 4], # final displacement, body rear center
                # 'vfin':self.GLSTAT['GXV'][-1][:],  # vitesse finale
                'vfin':self.MATSUM['xrbv'][-1, 0], # vitesse finale (part 1 = body)
                'IE':self.GLSTAT['IE'][-1][:]  # internal energy
@@ -453,16 +455,20 @@ class CAR6model(LSDYNAmodel):
         
         
     
-    def runGSA(self, N=10, meth='morris'):
-        """
+    def runGSA(self, N=10, meth='morris', compute=True):
+        """Run simulations for Global Sensitivity Analysis 
         
         
-        :param int N: number of trajectories ('morris')
-        :param str meth: GSA method ('morris')
+        :param int N: number of trajectories for 'morris', number of XX for 'sobol'
+        :param str meth: GSA method ('morris', 'sobol')
+        :param bool compute: run LS-DYNA or not
         """
+        mm = 'mm'
+        mpa = 'MPa'
         # Define parameters and bounds
         if self.kfile['basename']=='main_v222.k':
             problem = {'names': ['tbumper', 'troof', 'trailb', 'trailf', 'tgrill', 'thood'],
+                       'units': [mm, mm, mm, mm, mm, mm],
                        'num_vars': 6,
                        'bounds': [[2, 4], [1, 3], [1,3], [3,7], [0.5,1.5], [0.5, 1.5]],
                        # 'groups': ['G1', 'G2', 'G1'], # Sobol and Morris only. See Advanced Examples.
@@ -471,6 +477,8 @@ class CAR6model(LSDYNAmodel):
         elif self.kfile['basename']=='main_v223.k':
             problem = {'names': ['tbumper', 'trailb', 'trailf', 'tgrill', 'thood',
                                  'ybumper', 'yrailf', 'yrailb', 'ybody'],
+                       'units': [mm, mm, mm, mm, mm,
+                                 mpa, mpa, mpa, mpa],
                        'num_vars': 9,
                        'bounds': [[2, 4], [1,3], [3,7], [0.5,1.5], [0.5, 1.5],
                                   [300, 500], [300, 500], [300, 500], [300, 500]],
@@ -497,7 +505,7 @@ class CAR6model(LSDYNAmodel):
             print("Simulation # %i/%i"%(ii+1, len(X)))
             pdict = dict(zip(problem['names'], xx))
             self.overrideParam(pdict)
-            self.run(compute=True)
+            self.run(compute=compute)
             # get outputs
             self.fetchGLSTAT(comp=['IE', 't'])
             self.fetchMATSUM(comp=['t', 'xrbv'])
@@ -515,6 +523,7 @@ class CAR6model(LSDYNAmodel):
         # Store results
         SI = {}
         self.GSA[meth] = {'Y':feat, 'X':X, 'Si':SI}
+        self.problem = problem
 
         # Analyse outputs
         for kk in feat:
@@ -555,9 +564,10 @@ class CAR6model(LSDYNAmodel):
             # plt.box(False) # not such a good option here
             
         
-    def plotGSA(self, meth):
+    def plotGSA(self, meth='morris'):
         """Plot sensitivity indices of GSA. Plotting method from SALib.
         
+        :param str meth: GSA method ('morris', 'sobol')
         """
         for kk in self.GSA[meth]['Si']:
             ax = self.GSA[meth]['Si'][kk].plot()
@@ -573,6 +583,56 @@ class CAR6model(LSDYNAmodel):
                 ax.axhline(y=0, color='0.8', zorder=0)        
     
 
+    def plotXYvalues(self, meth='morris', meanstd=True):
+        """Plot raw inputs and outputs values from GSA DOE
+        
+        :param str meth: GSA method ('morris', 'sobol')
+        :param bool meanstd: also plot mean and std
+        """
+        # PLOT INPUT VALUES
+        nvar = self.GSA[meth]['X'].shape[1]  # number of variables
+        nsim = np.arange(0, self.GSA[meth]['X'].shape[0])  # simulation number
+        plt.figure()
+        for ii, xx in enumerate(self.GSA[meth]['X'].T):
+            if ii==0:
+                ax = plt.subplot(nvar, 1, ii+1)
+            else:
+                plt.subplot(nvar, 1, ii+1, sharex=ax)
+            plt.plot(nsim.reshape(nvar+1, -1).T, xx.reshape(nvar+1, -1), '.-', clip_on=False)
+            # handle grid spacing
+            plt.xticks(range(0,self.GSA[meth]['X'].shape[0], nvar+1))
+            if not ii==nvar-1:
+                plt.tick_params(axis='x', labelbottom=False)
+            plt.ylabel('%s [%s]'%(self.problem['names'][ii], self.problem['units'][ii]),
+                       rotation=0)
+            plt.grid(axis='x')
+            # plt.box(on=False)
+            
+        # See also 13_muprop/testSALib.py to plot input X values
+        # PLOT MARGINAL DISTRIBUTIONS
+        plt.figure()
+        for ii, xx in enumerate(self.GSA[meth]['X'].T):
+            plt.subplot(nvar, 1, ii+1)
+            
+            
+        
+        # PLOT OUTPUT VALUES
+        plt.figure()
+        for ii, kk in enumerate(self.GSA[meth]['Y']):
+            if ii==0:
+                ax = plt.subplot(len(self.GSA[meth]['Y']), 1, ii+1)
+            else:
+                plt.subplot(len(self.GSA[meth]['Y']), 1, ii+1, sharex=ax)
+            plt.plot(self.GSA[meth]['Y'][kk], '.-')
+            if meanstd:
+                mm = self.GSA[meth]['Y'][kk].mean()
+                std = self.GSA[meth]['Y'][kk].std()
+                plt.axhline(y=mm, color='0.7', zorder=0)
+                plt.axhline(y=mm-std, color='0.8', zorder=0)
+                plt.axhline(y=mm+std, color='0.8', zorder=0)
+            plt.ylabel('%s [%s]'%(kk, self.out_units[kk]))
+        
+        
 if __name__=="__main__":
     plt.close('all')
     
@@ -624,5 +684,7 @@ if __name__=="__main__":
     
     if True:
         CAR = CAR6model('./lsopt_car6_v3/main_v223.k', param)
-        CAR.runGSA(N=10, meth='morris')
+        # CAR.run(compute=True)
+        CAR.runGSA(N=2, meth='morris', compute=False)
         CAR.plotGSAmorris()
+        CAR.plotXYvalues()
