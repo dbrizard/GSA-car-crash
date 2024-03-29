@@ -376,7 +376,7 @@ if __name__=="__main__":
                 nrep = 6
             elif ntraj==10:
                 file = '/home/dbrizard/Calcul/25_car/GSA/car_v223_right-impact_v30/morris_n10_output.md'
-                nrep = 4
+                nrep = 6
                 
 
         out = ['fmax', 'dmax', 'vfin', 'IE']

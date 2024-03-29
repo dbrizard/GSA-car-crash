@@ -392,7 +392,11 @@ class VariableTimeSeries:
 
 class CAR6model(LSDYNAmodel):
     """Handle car6.k model
-
+    
+    Note: how to save data:
+    
+    a = numpy.asarray([ [1,2,3], [4,5,6], [7,8,9] ])
+    numpy.savetxt("foo.csv", a, delimiter=",")
     """
     def _setPartNames(self):
         """
@@ -598,7 +602,8 @@ class CAR6model(LSDYNAmodel):
                 ax = plt.subplot(nvar, 1, ii+1)
             else:
                 plt.subplot(nvar, 1, ii+1, sharex=ax)
-            plt.plot(nsim.reshape(nvar+1, -1).T, xx.reshape(nvar+1, -1), '.-', clip_on=False)
+            plt.plot(nsim.reshape(-1, nvar+1).T, xx.reshape(-1, nvar+1).T, '.-', clip_on=False)
+            # plt.plot(nsim, xx, '.-')
             # handle grid spacing
             plt.xticks(range(0,self.GSA[meth]['X'].shape[0], nvar+1))
             if not ii==nvar-1:
@@ -613,8 +618,9 @@ class CAR6model(LSDYNAmodel):
         plt.figure()
         for ii, xx in enumerate(self.GSA[meth]['X'].T):
             plt.subplot(nvar, 1, ii+1)
-            
-            
+            plt.hist(xx, bins=4, orientation='horizontal')
+            plt.ylabel('%s [%s]'%(self.problem['names'][ii], self.problem['units'][ii]),
+                       rotation=0)            
         
         # PLOT OUTPUT VALUES
         plt.figure()
@@ -631,6 +637,8 @@ class CAR6model(LSDYNAmodel):
                 plt.axhline(y=mm-std, color='0.8', zorder=0)
                 plt.axhline(y=mm+std, color='0.8', zorder=0)
             plt.ylabel('%s [%s]'%(kk, self.out_units[kk]))
+            
+        
         
         
 if __name__=="__main__":
@@ -685,6 +693,6 @@ if __name__=="__main__":
     if True:
         CAR = CAR6model('./lsopt_car6_v3/main_v223.k', param)
         # CAR.run(compute=True)
-        CAR.runGSA(N=2, meth='morris', compute=False)
+        CAR.runGSA(N=10, meth='morris', compute=True)
         CAR.plotGSAmorris()
         CAR.plotXYvalues()
