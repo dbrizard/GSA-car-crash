@@ -7,3 +7,5 @@
 !*.md
 !*.py
 !.gitignore
+!.txt
+!.csv

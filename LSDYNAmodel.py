@@ -500,6 +500,10 @@ class CAR6model(LSDYNAmodel):
             second_order = False
             X = saltelli.sample(problem, N, calc_second_order=second_order)
             print("Sobol, N*(D+2) = %i simulations"%len(X))
+        elif meth=='lhs':
+            X = latin.sample(problem, N, seed=None)
+            # default is uniform distributions. For other dists, see:
+            # https://salib.readthedocs.io/en/latest/user_guide/advanced.html
         print("="*50)
             
         FEAT = []
@@ -539,14 +543,33 @@ class CAR6model(LSDYNAmodel):
             elif meth=='sobol':
                 si = sobol.analyze(problem, feat[kk], calc_second_order=second_order, 
                                    num_resamples=100, conf_level=0.95, print_to_console=True)
+            elif meth=='lhs':
+                print('LHS method, no anlysis yet')
+                si = None
             SI[kk] = si
+    
+    
+    def saveGSA(self, fname, meth):
+        """
         
+        """
+        with open('%s_problem.txt'%fname, 'w') as f:
+            f.write(self.problem.__str__())
+            f.write('\n')
+            f.write(self.kfile.__str__())
+        np.savetxt('%s_X.csv'%fname, self.GSA[meth]['X'], delimiter=",")
+        for yy in self.GSA[meth]['Y']:
+            np.savetxt('%s_Y_%s.csv'%(fname, yy), self.GSA[meth]['Y'][yy], delimiter=",")
+
         
     def plotGSAmorris(self, star=True):
         """2D plot of the sensitivity indices of Morris analysis (mu vs sigma)
         
         """
-        morris = self.GSA['morris']
+        try:
+            morris = self.GSA['morris']
+        except KeyError:
+            return
         # XXX add star option
         for kk in morris['Si']:
             plt.figure('morris_%s'%kk)
@@ -690,9 +713,14 @@ if __name__=="__main__":
     # # Pickle the 'data' dictionary using the highest protocol available.
     #     pickle.dump(CAR, f, pickle.HIGHEST_PROTOCOL)
     
-    if True:
+    if False:
         CAR = CAR6model('./lsopt_car6_v3/main_v223.k', param)
         # CAR.run(compute=True)
         CAR.runGSA(N=10, meth='morris', compute=True)
         CAR.plotGSAmorris()
         CAR.plotXYvalues()
+
+    if True:
+        CAR = CAR6model('./lsopt_car6_v3/main_v223.k', param)
+        CAR.runGSA(N=120, meth='lhs', compute=True)
+        CAR.saveGSA('LHS4Eric', meth='lhs')
