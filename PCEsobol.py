@@ -68,10 +68,10 @@ class EricPCESobol():
                 plt.figure('S1ST-%s'%oo)
             else:
                 plt.figure(figname)
-            plt.plot(self.S1[oo].T, '+k')
             plt.plot(self.ST[oo].T, '+r')
-            plt.plot(self.S1_mean[oo], '+k', label='S1_mean', ms=15)
+            plt.plot(self.S1[oo].T, '+k')
             plt.plot(self.ST_mean[oo], '+r', label='ST_mean', ms=15)
+            plt.plot(self.S1_mean[oo], '+k', label='S1_mean', ms=15)
             plt.xlim(xmin=-xmargin, xmax=len(self.input)-1+xmargin)
             plt.xticks(ticks=range(len(self.input)), labels=self.input, rotation=45)
             plt.title(oo)
@@ -80,6 +80,75 @@ class EricPCESobol():
                 plt.ylim([0,1])
     
 
+class DenisPCESobol():
+    """My take on PCE Sobol indices with Openturns
+    
+    """
+    
+    def __init__(self,):
+        """
+        
+        """
+        self.input = ['tbumper', 'trailb', 'trailf', 'tgrill', 'thood', 'ybumper', 'yrailf', 'yrailb', 'ybody']
+        self.output = ('dmax', 'fmax', 'IE', 'vfin')
+        
+        ot.ResourceMap.SetAsUnsignedInteger("FittingTest-LillieforsMaximumSamplingSize", 100)
+
+        # Import X and Y
+        self.X = np.loadtxt('LHS4Eric_X.csv', delimiter=',')
+        inputSample = ot.Sample(self.X)
+        inputSample.setDescription(self.input)
+
+        self.Y = {}
+        self.chaosSI = {}
+        self.metamodel = {}
+        self.S1 = {}
+        self.ST = {}
+        for oo in self.output:
+            print('='*20, oo, '='*20, '\n')
+            self.Y[oo] = np.loadtxt('LHS4Eric_Y_%s.csv'%oo, delimiter=',')
+            
+            outputSample = ot.Sample(self.Y[oo][:,np.newaxis])
+            outputSample.setDescription([oo])
+            
+            # PCE
+            ot.ResourceMap.SetAsUnsignedInteger("FunctionalChaosAlgorithm-MaximumTotalDegree", 15)
+            algo = ot.FunctionalChaosAlgorithm(inputSample, outputSample)
+            algo.run()
+            result = algo.getResult()
+            self.metamodel[oo] = result.getMetaModel()
+            
+            self.chaosSI[oo] = ot.FunctionalChaosSobolIndices(result)
+            print(self.chaosSI[oo].summary())
+        
+            self.S1[oo] = [self.chaosSI[oo].getSobolIndex(ii) for ii in range(len(self.input))]
+            self.ST[oo] = [self.chaosSI[oo].getSobolTotalIndex(ii) for ii in range(len(self.input))]
+    
+    
+    def plotS1ST(self, figname=None, xmargin=0.2, xoffset=0.2, ylim=True):
+        """
+        
+        :param str figname: name for the figure
+        :param float xmargin: 
+            
+        :param bool ylim: set ylim to [0,1]
+        """
+        for oo in self.output:
+            if figname=='output':
+                plt.figure('S1ST-%s'%oo)
+            else:
+                plt.figure(figname)
+            x = np.arange(0, len(self.input)) + xoffset
+            plt.plot(x, self.ST[oo], '+r', label='ST_OT', ms=10)
+            plt.plot(x, self.S1[oo], '+k', label='S1_OT', ms=10)
+            plt.xlim(xmin=-xmargin, xmax=len(self.input)-1+xmargin)
+            plt.xticks(ticks=range(len(self.input)), labels=self.input , rotation=45)
+            plt.title(oo)
+            plt.legend()
+            if ylim:
+                plt.ylim([0,1]) 
+                
+        
 
 if __name__=='__main__':
     plt.close('all')
@@ -92,35 +161,9 @@ if __name__=='__main__':
 
     #%% Openturns on LS-DYNA car simulation data
     if True:
-        ot.ResourceMap.SetAsUnsignedInteger("FittingTest-LillieforsMaximumSamplingSize", 100)
-        
-        # Import X and Y
-        problem = {'names': ['tbumper', 'trailb', 'trailf', 'tgrill', 'thood', 'ybumper', 'yrailf', 'yrailb', 'ybody'], 
-                   'units': ['mm', 'mm', 'mm', 'mm', 'mm', 'MPa', 'MPa', 'MPa', 'MPa'], 
-                   'num_vars': 9, 
-                   'bounds': [[2, 4], [1, 3], [3, 7], [0.5, 1.5], [0.5, 1.5], [300, 500], [300, 500], [300, 500], [300, 500]]}
-
-        X = np.loadtxt('LHS4Eric_X.csv', delimiter=',')
-        inputSample = ot.Sample(X)
-        inputSample.setDescription(problem['names'])
-        
-        Y = {'dmax':np.loadtxt('LHS4Eric_Y_dmax.csv', delimiter=',')}
-        outputSample = ot.Sample(Y['dmax'][:,np.newaxis])
-        outputSample.setDescription(['d_max'])
-        
-        
-        # PCE
-        ot.ResourceMap.SetAsUnsignedInteger("FunctionalChaosAlgorithm-MaximumTotalDegree", 15)
-        algo = ot.FunctionalChaosAlgorithm(inputSample, outputSample)
-        algo.run()
-        result = algo.getResult()
-        metamodel = result.getMetaModel()
-        
-        chaosSI = ot.FunctionalChaosSobolIndices(result)
-        print(chaosSI.summary())
+        Denis = DenisPCESobol()
+        Denis.plotS1ST(figname='output')
                 
-        
-        # TODO: compare with Eric
         # TODO: metamodel quality
             
     

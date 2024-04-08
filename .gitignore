@@ -7,5 +7,7 @@
 !*.md
 !*.py
 !.gitignore
-!.txt
-!.csv
+!*.txt
+!*.csv
+lsrun.out.txt
+lsdynalog.txt
