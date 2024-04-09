@@ -57,17 +57,15 @@ class EricPCESobol():
             self.S1_mean[oo] = self.S1[oo].mean(axis=0)
             self.ST_mean[oo] = self.ST[oo].mean(axis=0)
         
-    def plotS1ST(self, figname=None, xmargin=0.2, ylim=True):
-        """
+    def plotS1ST(self, figname='', xmargin=0.3, ylim=True):
+        """Plot S1 and ST, for each output, on the same graph
         
-        :param float xmargin: 
+        :param str figname: prefix for the name of the figures 
+        :param float xmargin: x axis margins
         :param bool ylim: set ylim to [0,1]
         """
         for oo in self.output:
-            if figname=='output':
-                plt.figure('S1ST-%s'%oo)
-            else:
-                plt.figure(figname)
+            plt.figure('%s-%s'%(figname, oo))
             plt.plot(self.ST[oo].T, '+r')
             plt.plot(self.S1[oo].T, '+k')
             plt.plot(self.ST_mean[oo], '+r', label='ST_mean', ms=15)
@@ -125,22 +123,18 @@ class DenisPCESobol():
             self.ST[oo] = [self.chaosSI[oo].getSobolTotalIndex(ii) for ii in range(len(self.input))]
     
     
-    def plotS1ST(self, figname=None, xmargin=0.2, xoffset=0.2, ylim=True):
-        """
+    def plotS1ST(self, figname='', xmargin=0.3, xoffset=0.2, ylim=True):
+        """Plot S1 and ST, for each output, on the same graph
         
-        :param str figname: name for the figure
-        :param float xmargin: 
-            
+        :param str figname: prefix for the name of the figures 
+        :param float xmargin: x axis margins
         :param bool ylim: set ylim to [0,1]
         """
         for oo in self.output:
-            if figname=='output':
-                plt.figure('S1ST-%s'%oo)
-            else:
-                plt.figure(figname)
+            plt.figure('%s-%s'%(figname, oo))
             x = np.arange(0, len(self.input)) + xoffset
-            plt.plot(x, self.ST[oo], '+r', label='ST_OT', ms=10)
-            plt.plot(x, self.S1[oo], '+k', label='S1_OT', ms=10)
+            plt.plot(x, self.ST[oo], '+r', label='ST_Openturns', ms=10)
+            plt.plot(x, self.S1[oo], '+k', label='S1_Openturns', ms=10)
             plt.xlim(xmin=-xmargin, xmax=len(self.input)-1+xmargin)
             plt.xticks(ticks=range(len(self.input)), labels=self.input , rotation=45)
             plt.title(oo)
