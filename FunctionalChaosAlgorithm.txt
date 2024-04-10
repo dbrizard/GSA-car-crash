@@ -1,0 +1,10 @@
+FunctionalChaosAlgorithm()
+FunctionalChaosAlgorithm(FunctionalChaosAlgorithm  )
+FunctionalChaosAlgorithm(Sample  ,Sample  )
+FunctionalChaosAlgorithm(Function  ,Distribution  ,AdaptiveStrategy  )
+FunctionalChaosAlgorithm(Function  ,Distribution  ,AdaptiveStrategy  ,ProjectionStrategy  )
+FunctionalChaosAlgorithm(Sample  ,Sample  ,Distribution  ,AdaptiveStrategy  )
+FunctionalChaosAlgorithm(Sample  ,Sample  ,Distribution  ,AdaptiveStrategy  ,ProjectionStrategy  )
+FunctionalChaosAlgorithm(Sample  ,Point  ,Sample  ,Distribution  ,AdaptiveStrategy  )
+FunctionalChaosAlgorithm(Sample  ,Point  ,Sample  ,Distribution  ,AdaptiveStrategy  ,ProjectionStrategy  )
+

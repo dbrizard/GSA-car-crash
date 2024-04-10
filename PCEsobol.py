@@ -83,11 +83,25 @@ class DenisPCESobol():
     
     """
     
-    def __init__(self,):
-        """
+    def __init__(self,strategy='cleaning', q=0.4):
+        """Set the problem, inputs, outputs and compute PCE metamodel
         
+        
+        :param str strategy: adaptive strategy ('fixed' or 'cleaning')
+        :param float q: q-quasi norm parameter. If not precised, q = 0.4. (see HyperbolicAnisotropicEnumerateFunction)
         """
-        self.input = ['tbumper', 'trailb', 'trailf', 'tgrill', 'thood', 'ybumper', 'yrailf', 'yrailb', 'ybody']
+        mm, mpa = 'mm', 'MPa'
+        problem = {'names': ['tbumper', 'trailb', 'trailf', 'tgrill', 'thood',
+                             'ybumper', 'yrailf', 'yrailb', 'ybody'],
+                   'units': [mm, mm, mm, mm, mm,
+                             mpa, mpa, mpa, mpa],
+                   'num_vars': 9,
+                   'bounds': [[2, 4], [1,3], [3,7], [0.5,1.5], [0.5, 1.5],
+                              [300, 500], [300, 500], [300, 500], [300, 500]],
+                   }
+        
+        self.problem = problem
+        self.input = problem['names']
         self.output = ('dmax', 'fmax', 'IE', 'vfin')
         
         ot.ResourceMap.SetAsUnsignedInteger("FittingTest-LillieforsMaximumSamplingSize", 100)
@@ -96,6 +110,41 @@ class DenisPCESobol():
         self.X = np.loadtxt('LHS4Eric_X.csv', delimiter=',')
         inputSample = ot.Sample(self.X)
         inputSample.setDescription(self.input)
+
+        distlist = [ot.Uniform(aa, bb) for (aa, bb) in problem['bounds']]
+        # distribution = ot.ComposedDistribution([ot.Uniform()]*len(self.input))
+        distribution = ot.ComposedDistribution(distlist)
+
+
+        # https://openturns.github.io/openturns/latest/user_manual/response_surface/_generated/openturns.FixedStrategy.html#openturns.FixedStrategy
+        polyColl = [0.0]*len(self.input)
+        for i in range(distribution.getDimension()):
+            polyColl[i] = ot.StandardDistributionPolynomialFactory(distribution.getMarginal(i))
+        # enumerateFunction = ot.LinearEnumerateFunction(len(self.input))
+        enumerateFunction = ot.HyperbolicAnisotropicEnumerateFunction(len(self.input), q)
+        productBasis = ot.OrthogonalProductPolynomialFactory(polyColl, enumerateFunction)
+
+        if strategy=='fixed':
+            # Number of terms of the basis.
+            degree = 2
+            indexMax = enumerateFunction.getStrataCumulatedCardinal(degree)
+            # XXX attention à l'overfitting !!
+            print('indexMax', indexMax)
+            adaptiveStrategy = ot.FixedStrategy(productBasis, indexMax)  # https://openturns.github.io/openturns/latest/user_manual/response_surface/_generated/openturns.FixedStrategy.html#openturns.FixedStrategy
+        elif strategy=='cleaning':
+            # Maximum index that can be used by the EnumerateFunction to 
+            # determine the last term of the basis.
+            maximumDimension = 100
+            # Parameter that characterizes the cleaning strategy. 
+            # It represents the number of efficient coefficients of the basis. 
+            # Its default value is set to 20.
+            maximumSize = 20
+            # Parameter used as a threshold for selecting the efficient coefficients 
+            # of the basis. The real threshold represents the multiplication of 
+            # the significanceFactor with the maximum magnitude of the current 
+            # determined coefficients. Its default value is equal to 1e^{-4}.
+            significanceFactor = 1e-4
+            adaptiveStrategy = ot.CleaningStrategy(productBasis, maximumDimension, maximumSize, significanceFactor)
 
         self.Y = {}
         self.chaosSI = {}
@@ -110,8 +159,8 @@ class DenisPCESobol():
             outputSample.setDescription([oo])
             
             # PCE
-            ot.ResourceMap.SetAsUnsignedInteger("FunctionalChaosAlgorithm-MaximumTotalDegree", 15)
-            algo = ot.FunctionalChaosAlgorithm(inputSample, outputSample)
+            # ot.ResourceMap.SetAsUnsignedInteger("FunctionalChaosAlgorithm-MaximumTotalDegree", 15)
+            algo = ot.FunctionalChaosAlgorithm(inputSample, outputSample, distribution, adaptiveStrategy)
             algo.run()
             result = algo.getResult()
             self.metamodel[oo] = result.getMetaModel()
@@ -122,6 +171,10 @@ class DenisPCESobol():
             self.S1[oo] = [self.chaosSI[oo].getSobolIndex(ii) for ii in range(len(self.input))]
             self.ST[oo] = [self.chaosSI[oo].getSobolTotalIndex(ii) for ii in range(len(self.input))]
     
+    
+        # XXX Metamodel validation
+        # val = ot.MetaModelValidation(X_test, Y_test, metamodel)
+        # https://openturns.github.io/openturns/latest/auto_meta_modeling/polynomial_chaos_metamodel/plot_chaos_sobol_confidence.html#sphx-glr-auto-meta-modeling-polynomial-chaos-metamodel-plot-chaos-sobol-confidence-py
     
     def plotS1ST(self, figname='', xmargin=0.3, xoffset=0.2, ylim=True):
         """Plot S1 and ST, for each output, on the same graph
@@ -150,13 +203,13 @@ if __name__=='__main__':
     #%% Plot Eric's results
     if True:
         Eric = EricPCESobol()
-        Eric.plotS1ST(figname='output')
+        Eric.plotS1ST(figname='S1ST')
 
 
     #%% Openturns on LS-DYNA car simulation data
     if True:
         Denis = DenisPCESobol()
-        Denis.plotS1ST(figname='output')
+        Denis.plotS1ST(figname='S1ST')
                 
         # TODO: metamodel quality
             
