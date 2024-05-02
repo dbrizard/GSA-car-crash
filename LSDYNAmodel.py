@@ -690,9 +690,9 @@ if __name__=="__main__":
     
     
     #%% TEST CAR6model CLASS
-    if False:
+    if True:
         CAR = CAR6model('./lsopt_car6_v2/main_v222.k', param)
-        CAR.run(compute=True)
+        CAR.run(compute=False)
         CAR.fetchMATSUM()
         CAR.fetchGLSTAT()
         CAR.plotMATSUM('HE')
@@ -720,7 +720,7 @@ if __name__=="__main__":
         CAR.plotGSAmorris()
         CAR.plotXYvalues()
 
-    if True:
+    if False:
         CAR = CAR6model('./lsopt_car6_v3/main_v223.k', param)
         CAR.runGSA(N=120, meth='lhs', compute=True)
         CAR.saveGSA('LHS4Eric', meth='lhs')

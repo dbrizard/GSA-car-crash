@@ -134,7 +134,7 @@ class DenisPCESobol():
         elif strategy=='cleaning':
             # Maximum index that can be used by the EnumerateFunction to 
             # determine the last term of the basis.
-            maximumDimension = 100
+            maximumDimension = 200
             # Parameter that characterizes the cleaning strategy. 
             # It represents the number of efficient coefficients of the basis. 
             # Its default value is set to 20.

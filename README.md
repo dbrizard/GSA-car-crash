@@ -9,6 +9,7 @@ This code was developped using Python 3.6.8 and the following modules:
 - Matplotlib 3.36.2
 - SALib 1.3.11
 - openturns 1.19.post1
+- dynareadout 23.10.2
 
 LS-DYNA executable is `ls-dyna_smp_s_r1010_x64_redhat5_ifort160`. 
 
@@ -41,4 +42,5 @@ Module `PCEsobol.py` builds a PCE metamodel and computes the Sobol indices.
 It relies on [OpenTURNS](https://openturns.github.io/openturns/latest/index.html). 
 
 The input and output of the car crash model are generated with `LSDYNAmodel.py`,
-they are stored in the `LHS4Eric_X.csv` and `LHS4Eric_Y_xxxx.csv` files. 
+they are stored in the `LHS4Eric_X.csv` and `LHS4Eric_Y_xxxx.csv` files
+(where `xxxx` stands for the name of the output).
