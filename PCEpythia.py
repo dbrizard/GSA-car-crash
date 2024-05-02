@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Try to use Pythia module for PCE. 
+Abandonned track, OpneTURNS was prefered, see :mod:`PCEsobol`
+
+
 Created on Mon Apr  8 10:41:13 2024
 
 @author: dbrizard
