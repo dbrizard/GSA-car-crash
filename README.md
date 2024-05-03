@@ -16,7 +16,8 @@ LS-DYNA executable is `ls-dyna_smp_s_r1010_x64_redhat5_ifort160`.
 
 ## LS-DYNA car crash model
 
-The model is located in `lsopt_car6_v3` folder.
+The model is located in `lsopt_car6_v3` folder. 
+The other `lsopt_xxx`folders contain older/developement versions of the model. 
 There are 3 LS-DYNA files:
 
 - the main file is `main_v223.k`. It contains parameters set at their initial values;

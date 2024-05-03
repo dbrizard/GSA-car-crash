@@ -44,19 +44,11 @@ class LSDYNAmodel:
     
     """
     
-    def __init__(self, kfile, param):
+    def __init__(self, kfile):
         """Define parameters
 
         :param str kfile: main .k file full path
-        :param dict param: {'param':value} dictionnary
-        
-        :param list pname: full name of parameters
-        :param list pvar: symbol for parameters
-        :param list punit: units of parameters
-        :param list pvalue: nominal values of parameters
         """
-        # self.params = {'name':pname, 'var':pvar, 'unit':punit, 'value':pvalue}
-        self.param = param
         abspath = os.path.abspath(kfile)
         self.kfile = {'basename':os.path.basename(abspath),
                       'dirname':os.path.dirname(abspath),
@@ -671,7 +663,7 @@ if __name__=="__main__":
     param = {'tbumper':3, 'troof':2, 'trailb':2, 'trailf':5, 'tgrill':1, 'thood':1}
     if False:
         
-        Car = LSDYNAmodel('./lsopt_car6/main_v21.k', param)
+        Car = LSDYNAmodel('./lsopt_car6/main_v21.k')
         # Car = LSDYNAmodel('./lsopt_car6/car6_crash_v2.k', ['test'], ['t'], ['-'], [0])
         Car._checkMainK()
         Car.overrideParam(param)
@@ -690,8 +682,8 @@ if __name__=="__main__":
     
     
     #%% TEST CAR6model CLASS
-    if True:
-        CAR = CAR6model('./lsopt_car6_v2/main_v222.k', param)
+    if False:
+        CAR = CAR6model('./lsopt_car6_v2/main_v222.k')
         CAR.run(compute=False)
         CAR.fetchMATSUM()
         CAR.fetchGLSTAT()
@@ -713,14 +705,14 @@ if __name__=="__main__":
     # # Pickle the 'data' dictionary using the highest protocol available.
     #     pickle.dump(CAR, f, pickle.HIGHEST_PROTOCOL)
     
-    if False:
-        CAR = CAR6model('./lsopt_car6_v3/main_v223.k', param)
-        # CAR.run(compute=True)
-        CAR.runGSA(N=10, meth='morris', compute=True)
-        CAR.plotGSAmorris()
-        CAR.plotXYvalues()
+    if True:
+        CAR = CAR6model('./lsopt_car6_v3/main_v223.k')
+        CAR.run(compute=True)
+        # CAR.runGSA(N=10, meth='morris', compute=True)
+        # CAR.plotGSAmorris()
+        # CAR.plotXYvalues()
 
     if False:
-        CAR = CAR6model('./lsopt_car6_v3/main_v223.k', param)
+        CAR = CAR6model('./lsopt_car6_v3/main_v223.k')
         CAR.runGSA(N=120, meth='lhs', compute=True)
         CAR.saveGSA('LHS4Eric', meth='lhs')
