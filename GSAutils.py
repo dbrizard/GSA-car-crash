@@ -12,6 +12,7 @@ Created on Mon Dec 18 15:19:38 2023
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 class SobolIndices:
     """
     A class to handle Sobol Indices
@@ -81,12 +82,13 @@ class MorrisResults:
     A class to handle Morris anamysis results
     """
     
-    def __init__(self, fname, skiprows=3, max_rows=None):
+    def __init__(self, fname, skiprows=3, max_rows=None, outname=''):
         """
         
         :param str fname: name of file to read
         """
         self._readSAlibOutput(fname, skiprows=skiprows, max_rows=max_rows)
+        self.outname = outname
         
         
     def _readSAlibOutput(self, fname, skiprows=3, max_rows=None):
@@ -109,7 +111,8 @@ class MorrisResults:
         :param str figname: name for the figure
         :param bool conf: plot confidence interval *mu_star_conf*
         """       
-        plt.figure()
+        plt.figure(figname)
+        plt.title(self.outname)
         
         X = self.SI[:,0]
         Y = self.SI[:,3]
@@ -126,6 +129,37 @@ class MorrisResults:
             
         plt.xlabel('$\\mu^*$')
         plt.ylabel('$\\sigma$')
+        
+        
+    def plotMorris_color(self, figname=None, conf=False, nofig=False,
+                         xlim=None, ylim=None):
+        """Plot Morris graph (*sigma* vs *mu_star*) with colored markers
+        
+        :param str figname: name for the figure
+        :param bool conf: plot confidence interval *mu_star_conf*
+        :param bool nofig: do not create a new figure (for subfig purpose, see :meth:`GatherMorris.subplot2D`)
+        """
+        if not nofig:
+            plt.figure(figname)
+        plt.title(self.outname)
+        
+        X = self.SI[:,0]
+        Y = self.SI[:,3]
+        if conf:
+            Xrr = self.SI[:,2]
+        else:
+            Xrr = [0]*len(X)
+
+        for ii, (xx, yy, rr, nn) in enumerate(zip(X, Y, Xrr, self.param)):
+            plt.errorbar(xx, yy, yerr=None, xerr=rr, fmt='+', ms=10, lw=2, ecolor='0.7', mew=2)
+            plt.annotate(nn, (xx, yy), xytext=(2,2), textcoords='offset pixels', color='C%i'%ii)
+        plt.axline((0,0), slope=1, color='0.8')
+            
+        plt.xlabel('$\\mu^*$')
+        plt.ylabel('$\\sigma$')     
+        
+        plt.xlim(xlim)
+        plt.ylim(ylim)
 
 
 
@@ -225,15 +259,17 @@ class GatherMorris:
     A class to handle a list of :meth:`MorrisResults`
     """
     
-    def __init__(self, MOlist, pname, values):
+    def __init__(self, MOlist, pname, values, outname):
         """
         
         :param list SIlist: list of :class:`MorrisResults` objects
         :param str pname: name of the parameter
-        :param list values: values of the parameter        
+        :param list values: values of the parameter  
+        :param str outname: name of the output
         """
         self.MOlist = MOlist
         self.param = {'name':pname, 'values':values}
+        self.outname = outname
         
         self._aggregate()
     
@@ -249,7 +285,7 @@ class GatherMorris:
         
         
     def plot(self, figname=None, xmargin=0.2, conf=True):
-        """
+        """Plot mu_star and sigma wrt param value (subplot)
         
         :param str figname: name for the figure
         :param float xmargin: additional margin for xlim
@@ -259,6 +295,7 @@ class GatherMorris:
         plt.figure(figname)
         
         plt.subplot(211)
+        plt.title(self.outname)
         for mu_star, mu_star_conf, pp in zip(self.mu_star, self.mu_star_conf, self.MOlist[0].param):
             if conf:
                 plt.errorbar(X, mu_star, yerr=mu_star_conf, label=pp,
@@ -282,13 +319,13 @@ class GatherMorris:
 
 
     def plot2D(self, figname=None, conf=True):
-        """
+        """Gather sigma vs mu_star plots for all the values of param
         
         :param str figname: name for the figure
         :param bool conf: plot confidence intervals
         """
-        
         plt.figure(figname)
+        plt.title(self.outname)
         plt.axline((0,0), slope=1, color='0.8')
         
         ZZ = zip(self.mu_star, self.mu_star_conf, self.sigma, self.MOlist[0].param)
@@ -303,6 +340,24 @@ class GatherMorris:
         plt.legend()
         plt.xlabel('$\\mu^*$')
         plt.ylabel('$\\sigma$')
+        
+    
+    def subplot2D(self, figname=None, figsize=(19.2, 4.8), conf=False, margin=1.05):
+        """Plot all the sigma vs mu_star plots with subplot
+        
+        :param str figname: name for the figure
+        :param bool conf: plot confidence intervals
+        """
+        plt.figure(figname, figsize=figsize)
+        for ii, MO in enumerate(self.MOlist):
+            # determine xlim and ylim
+            xlim = margin*self.mu_star.max()
+            ylim = margin*self.sigma.max()
+            # plot Morris graphs
+            plt.subplot(1,len(self.MOlist),ii+1)
+            MO.plotMorris_color(conf=conf, nofig=True, xlim=(0, xlim), ylim=(0, ylim))
+            if ii==0:
+                plt.title(self.outname)
         
         
 
@@ -380,11 +435,14 @@ if __name__=="__main__":
                 
 
         out = ['fmax', 'dmax', 'vfin', 'IE']
+        GM = []
         for outt, of in zip(out, offset):
             MOlist = []
             for ii in range(nrep):
                 mo1 = MorrisResults(file, skiprows=ii*nlignes+4+of, max_rows=nparam)
                 MOlist.append(mo1)
             
-            MO = GatherMorris(MOlist, 'rep', [ii for ii in range(len(MOlist))])
+            MO = GatherMorris(MOlist, 'rep', [ii for ii in range(len(MOlist))], outt)
             MO.plot2D(figname='morris_%i_%s'%(ntraj, outt))
+            MO.subplot2D(figname='smorris_%i_%s'%(ntraj, outt))
+            GM.append(MO)
