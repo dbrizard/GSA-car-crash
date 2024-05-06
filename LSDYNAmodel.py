@@ -705,14 +705,17 @@ if __name__=="__main__":
     # # Pickle the 'data' dictionary using the highest protocol available.
     #     pickle.dump(CAR, f, pickle.HIGHEST_PROTOCOL)
     
+    
+    #%% RUN MORRIS GSA
     if True:
         CAR = CAR6model('./lsopt_car6_v3/main_v223.k')
-        CAR.run(compute=True)
-        # CAR.runGSA(N=10, meth='morris', compute=True)
-        # CAR.plotGSAmorris()
-        # CAR.plotXYvalues()
+        # CAR.run(compute=True)
+        CAR.runGSA(N=20, meth='morris', compute=True)
+        CAR.plotGSAmorris()
+        CAR.plotXYvalues()
 
+    #%% RUN LHS DOE FOR PCE SOBOL
     if False:
         CAR = CAR6model('./lsopt_car6_v3/main_v223.k')
-        CAR.runGSA(N=120, meth='lhs', compute=True)
-        CAR.saveGSA('LHS4Eric', meth='lhs')
+        CAR.runGSA(N=330, meth='lhs', compute=True)
+        CAR.saveGSA('LHS_330', meth='lhs')

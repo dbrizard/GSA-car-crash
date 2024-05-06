@@ -107,7 +107,7 @@ class DenisPCESobol():
         ot.ResourceMap.SetAsUnsignedInteger("FittingTest-LillieforsMaximumSamplingSize", 100)
 
         # Import X and Y
-        self.X = np.loadtxt('LHS4Eric_X.csv', delimiter=',')
+        self.X = np.loadtxt('LHS/LHS-120_X.csv', delimiter=',')
         inputSample = ot.Sample(self.X)
         inputSample.setDescription(self.input)
 
@@ -153,7 +153,7 @@ class DenisPCESobol():
         self.ST = {}
         for oo in self.output:
             print('='*20, oo, '='*20, '\n')
-            self.Y[oo] = np.loadtxt('LHS4Eric_Y_%s.csv'%oo, delimiter=',')
+            self.Y[oo] = np.loadtxt('LHS/LHS-120_Y_%s.csv'%oo, delimiter=',')
             
             outputSample = ot.Sample(self.Y[oo][:,np.newaxis])
             outputSample.setDescription([oo])
