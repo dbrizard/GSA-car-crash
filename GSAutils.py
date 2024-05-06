@@ -411,7 +411,7 @@ if __name__=="__main__":
     
     # %% Morris n5, n10 and n20 repetitions
     if True:
-        ntraj = 10
+        ntraj = 20
         model = 'v223'
         if model=='v222':
             # OLD MODEL
@@ -429,13 +429,10 @@ if __name__=="__main__":
             offset = [0, 12, 24, 36]  # offset to fecht results for each output variable
             nlignes = 51  # number of lignes for 1 set of morris indices for all outputs
             nparam = 9  # number of uncertain parameters
-            folder = '/home/dbrizard/Calcul/25_car/GSA_old/car_v223_right-impact_v30/'
-            if ntraj==5:
-                file = os.path.join(folder, 'morris_n5_output.md')
-                nrep = 6
-            elif ntraj==10:
-                file = os.path.join(folder, 'morris_n10_output.md')
-                nrep = 6
+            folder = '/home/dbrizard/Calcul/25_car/GSA/car_v223_right-impact_v30/'
+            file = os.path.join(folder, 'morris_n%i_output.md'%ntraj)
+            NREP = {5:6, 10:6, 20:4}  # number of repetitions of the morris analysis wrt number of trajectories
+            nrep = NREP[ntraj]
                 
 
         out = ['fmax', 'dmax', 'vfin', 'IE']
