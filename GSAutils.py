@@ -9,6 +9,7 @@ Created on Mon Dec 18 15:19:38 2023
 @author: dbrizard
 """
 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -408,11 +409,12 @@ if __name__=="__main__":
             SO.plotSTS1(si='S1')
 
     
-    # %% Morris n5 and n10 repetitions
+    # %% Morris n5, n10 and n20 repetitions
     if True:
         ntraj = 10
         model = 'v223'
         if model=='v222':
+            # OLD MODEL
             offset = [0, 9, 18, 27]  # offset to fecht results for each output variable
             nlignes = 39  # number of lignes for 1 set of morris indices for all outputs
             nparam = 6
@@ -423,14 +425,16 @@ if __name__=="__main__":
                 file = '/home/dbrizard/Calcul/25_car/GSA_old/car_v222_right-impact_v30/morris-n5-output.md'
                 nrep = 6
         elif model=='v223':
-            offset = [0, 12, 24, 36]
-            nlignes = 51
-            nparam = 9
+            # CURRENT MODEL
+            offset = [0, 12, 24, 36]  # offset to fecht results for each output variable
+            nlignes = 51  # number of lignes for 1 set of morris indices for all outputs
+            nparam = 9  # number of uncertain parameters
+            folder = '/home/dbrizard/Calcul/25_car/GSA_old/car_v223_right-impact_v30/'
             if ntraj==5:
-                file = '/home/dbrizard/Calcul/25_car/GSA_old/car_v223_right-impact_v30/morris_n5_output.md'
+                file = os.path.join(folder, 'morris_n5_output.md')
                 nrep = 6
             elif ntraj==10:
-                file = '/home/dbrizard/Calcul/25_car/GSA/car_v223_right-impact_v30/morris_n10_output.md'
+                file = os.path.join(folder, 'morris_n10_output.md')
                 nrep = 6
                 
 
