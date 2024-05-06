@@ -78,15 +78,16 @@ class EricPCESobol():
                 plt.ylim([0,1])
     
 
-class DenisPCESobol():
+class OpenTurnsPCESobol():
     """My take on PCE Sobol indices with Openturns
     
     """
     
-    def __init__(self,strategy='cleaning', q=0.4):
+    def __init__(self, basepath='LHS/LHS-', ns=120, strategy='cleaning', q=0.4):
         """Set the problem, inputs, outputs and compute PCE metamodel
         
-        
+        :param str basepath: base path for the input and output files
+        :param int ns: number of samples in the LHS DOE
         :param str strategy: adaptive strategy ('fixed' or 'cleaning')
         :param float q: q-quasi norm parameter. If not precised, q = 0.4. (see HyperbolicAnisotropicEnumerateFunction)
         """
@@ -107,7 +108,7 @@ class DenisPCESobol():
         ot.ResourceMap.SetAsUnsignedInteger("FittingTest-LillieforsMaximumSamplingSize", 100)
 
         # Import X and Y
-        self.X = np.loadtxt('LHS/LHS-120_X.csv', delimiter=',')
+        self.X = np.loadtxt('%s%i_X.csv'%(basepath, ns), delimiter=',')
         inputSample = ot.Sample(self.X)
         inputSample.setDescription(self.input)
 
@@ -153,7 +154,7 @@ class DenisPCESobol():
         self.ST = {}
         for oo in self.output:
             print('='*20, oo, '='*20, '\n')
-            self.Y[oo] = np.loadtxt('LHS/LHS-120_Y_%s.csv'%oo, delimiter=',')
+            self.Y[oo] = np.loadtxt('%s%i_Y_%s.csv'%(basepath, ns, oo), delimiter=',')
             
             outputSample = ot.Sample(self.Y[oo][:,np.newaxis])
             outputSample.setDescription([oo])
@@ -175,19 +176,23 @@ class DenisPCESobol():
         # XXX Metamodel validation
         # val = ot.MetaModelValidation(X_test, Y_test, metamodel)
         # https://openturns.github.io/openturns/latest/auto_meta_modeling/polynomial_chaos_metamodel/plot_chaos_sobol_confidence.html#sphx-glr-auto-meta-modeling-polynomial-chaos-metamodel-plot-chaos-sobol-confidence-py
+
     
-    def plotS1ST(self, figname='', xmargin=0.3, xoffset=0.2, ylim=True):
+    def plotS1ST(self, figname='', color=None, label='', 
+                 xmargin=0.3, xoffset=0.2, ylim=True):
         """Plot S1 and ST, for each output, on the same graph
         
-        :param str figname: prefix for the name of the figures 
+        :param str figname: prefix for the name of the figures
+        :param str color: color for the markers
         :param float xmargin: x axis margins
+        :param float xoffset: horizontal offset of the points (in [0, 1] interval)
         :param bool ylim: set ylim to [0,1]
         """
         for oo in self.output:
             plt.figure('%s-%s'%(figname, oo))
             x = np.arange(0, len(self.input)) + xoffset
-            plt.plot(x, self.ST[oo], '+r', label='ST_Openturns', ms=10)
-            plt.plot(x, self.S1[oo], '+k', label='S1_Openturns', ms=10)
+            plt.plot(x, self.ST[oo], '+', label='ST_%s'%label, ms=14, color=color)
+            plt.plot(x, self.S1[oo], 'x', label='S1_%s'%label, ms=10, color=color)
             plt.xlim(xmin=-xmargin, xmax=len(self.input)-1+xmargin)
             plt.xticks(ticks=range(len(self.input)), labels=self.input , rotation=45)
             plt.title(oo)
@@ -208,8 +213,11 @@ if __name__=='__main__':
 
     #%% Openturns on LS-DYNA car simulation data
     if True:
-        Denis = DenisPCESobol()
-        Denis.plotS1ST(figname='S1ST')
+        OTS120 = OpenTurnsPCESobol(ns=120)
+        OTS120.plotS1ST(figname='S1ST', color='C0', label='LHS-120')
+                
+        OTS330 = OpenTurnsPCESobol(ns=330)
+        OTS330.plotS1ST(figname='S1ST', color='C2', label='LHS-330')
                 
         # TODO: metamodel quality
             

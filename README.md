@@ -34,7 +34,8 @@ done with `LSDYNAmodel.py` module.
 ## Post-treatment: plot all the Morris analyses
 
 To plot the various Morris analyses, use `GSAutils.py` module. 
-It reads and plot data stored manually in `GSA/car_v223_right-impact_v30/morris_n10_output.md`.
+It reads and plots data stored manually in `GSA/car_v223_right-impact_v30/morris_nXX_output.md`,
+where `XX` stands for the number of Morris trajectories used for each analysis.
 
 
 ## Polynomial Chaos metamodel and Sobol indices
@@ -43,5 +44,7 @@ Module `PCEsobol.py` builds a PCE metamodel and computes the Sobol indices.
 It relies on [OpenTURNS](https://openturns.github.io/openturns/latest/index.html). 
 
 The input and output of the car crash model are generated with `LSDYNAmodel.py`,
-they are stored in the `LHS4Eric_X.csv` and `LHS4Eric_Y_xxxx.csv` files
-(where `xxxx` stands for the name of the output).
+they are stored in the `LHS` folder.
+
+- `LHS-nnn_X.csv`, where `nnn` stands for the number of samples, contains the input samples;
+- and `LHS-nnn_Y_xxxx.csv`, where `xxxx` stands for the name of the output, contains the output values.
