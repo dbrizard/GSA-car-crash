@@ -80,16 +80,20 @@ class SobolIndices:
 
 class MorrisResults:
     """
-    A class to handle Morris anamysis results
+    A class to handle Morris analysis results
     """
     
     def __init__(self, fname, skiprows=3, max_rows=None, outname=''):
         """
         
         :param str fname: name of file to read
+        :param int skiprows: given to :func:`np.loadtxt`
+        :param int max_rows: given to :func:`np.loadtxt`
+        :param str outname: name of the output
         """
         self._readSAlibOutput(fname, skiprows=skiprows, max_rows=max_rows)
         self.outname = outname
+        self.sortbyMuStar()
         
         
     def _readSAlibOutput(self, fname, skiprows=3, max_rows=None):
@@ -104,6 +108,15 @@ class MorrisResults:
         # mu_star, mu, m_star_conf, sigma
         self.SI = SI
         self.param = param.tolist()
+        
+    
+    def sortbyMuStar(self,):
+        """Sort input parameters with decreasing mu_star
+        
+        """
+        ind = self.SI[:,0].argsort()
+        self.muStarSort = {'param':[self.param[ii] for ii in ind], 'ind':ind}
+        
 
 
     def plotMorris(self, figname=None, conf=True):
@@ -115,10 +128,10 @@ class MorrisResults:
         plt.figure(figname)
         plt.title(self.outname)
         
-        X = self.SI[:,0]
-        Y = self.SI[:,3]
+        X = self.SI[:,0]  # mu_star
+        Y = self.SI[:,3]  # sigma
         if conf:
-            Xrr = self.SI[:,2]
+            Xrr = self.SI[:,2]  # mu_star_conf
         else:
             Xrr = 0
 
@@ -282,7 +295,10 @@ class GatherMorris:
         self.mu_star = np.array([temp.SI[:,0] for temp in self.MOlist]).T
         self.mu = np.array([temp.SI[:,1] for temp in self.MOlist]).T
         self.mu_star_conf = np.array([temp.SI[:,2] for temp in self.MOlist]).T
-        self.sigma = np.array([temp.SI[:,3] for temp in self.MOlist]).T  # XXX .T seems useless...     
+        self.sigma = np.array([temp.SI[:,3] for temp in self.MOlist]).T  # XXX .T seems useless...
+        
+        self.paramSort = np.array([temp.muStarSort['param'] for temp in self.MOlist]).T
+        self.indSort = np.array([temp.muStarSort['ind'] for temp in self.MOlist]).T
         
         
     def plot(self, figname=None, xmargin=0.2, conf=True):
@@ -414,7 +430,7 @@ if __name__=="__main__":
     
     # %% Morris n5, n10 and n20 repetitions
     if True:
-        ntraj = 5
+        ntraj = 20
         model = 'v223'
         if model=='v222':
             # OLD MODEL
@@ -438,6 +454,7 @@ if __name__=="__main__":
             nrep = NREP[ntraj]
                 
 
+        folder = 'GSA/car_v223_right-impact_v30/gathermorris/'  # folder for saving csv output
         out = ['fmax', 'dmax', 'vfin', 'IE']
         GM = []
         for outt, of in zip(out, offset):
@@ -450,3 +467,6 @@ if __name__=="__main__":
             MO.plot2D(figname='morris_%i_%s'%(ntraj, outt))
             MO.subplot2D(figname='smorris_%i_%s'%(ntraj, outt))
             GM.append(MO)
+
+            np.savetxt(folder+'sortInd_%i_%s.csv'%(ntraj, outt),   MO.indSort,   '%i', delimiter=',')
+            np.savetxt(folder+'sortParam_%i_%s.csv'%(ntraj, outt), MO.paramSort, '%s', delimiter=',')

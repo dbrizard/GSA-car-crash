@@ -542,8 +542,12 @@ class CAR6model(LSDYNAmodel):
     
     
     def saveGSA(self, fname, meth):
-        """
+        """Save input DOE and output values. 
         
+        Mainly used for LHS method, for later use in `mod:PCEsobol`
+        
+        :param str fname: prefix name for the file
+        :param str meth: which GSA data to save        
         """
         with open('%s_problem.txt'%fname, 'w') as f:
             f.write(self.problem.__str__())

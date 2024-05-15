@@ -1,0 +1,9 @@
+ybody,ybody,ybody,yrailb,tgrill,tgrill
+tgrill,yrailb,tgrill,thood,ybody,yrailb
+thood,ybumper,yrailb,ybody,ybumper,thood
+ybumper,tgrill,thood,ybumper,yrailb,ybody
+yrailb,trailb,yrailf,tgrill,yrailf,trailb
+yrailf,thood,ybumper,trailb,thood,ybumper
+tbumper,yrailf,trailb,yrailf,tbumper,yrailf
+trailb,tbumper,tbumper,tbumper,trailb,tbumper
+trailf,trailf,trailf,trailf,trailf,trailf
