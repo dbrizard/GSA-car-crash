@@ -319,7 +319,7 @@ class GatherMorris:
         #     plt.plot(X, sigma)
 
 
-    def plot2D(self, figname=None, conf=True):
+    def plot2D(self, figname=None, conf=True, pointID=True):
         """Gather sigma vs mu_star plots for all the values of param
         
         :param str figname: name for the figure
@@ -331,12 +331,15 @@ class GatherMorris:
         
         ZZ = zip(self.mu_star, self.mu_star_conf, self.sigma, self.MOlist[0].param)
         
-        for mu_star, mu_star_conf, sigma, pp in ZZ:
+        for jj, (mu_star, mu_star_conf, sigma, pp) in enumerate(ZZ):
             if conf:
                 plt.errorbar(mu_star, sigma, yerr=None, xerr=mu_star_conf, label=pp,
-                             fmt='+-', ms=10, lw=2, ecolor='0.7')
+                             fmt='.:', lw=1, ecolor='0.8')
             else:
-                plt.plot(mu_star, sigma, '.-', label=pp)
+                plt.plot(mu_star, sigma, '.:', label=pp)
+            if pointID:
+                for ii, (xx, yy) in enumerate(zip(mu_star, sigma)):
+                    plt.text(xx, yy, ii, color='C%i'%jj, )
 
         plt.legend()
         plt.xlabel('$\\mu^*$')
@@ -411,7 +414,7 @@ if __name__=="__main__":
     
     # %% Morris n5, n10 and n20 repetitions
     if True:
-        ntraj = 20
+        ntraj = 5
         model = 'v223'
         if model=='v222':
             # OLD MODEL
@@ -431,7 +434,7 @@ if __name__=="__main__":
             nparam = 9  # number of uncertain parameters
             folder = '/home/dbrizard/Calcul/25_car/GSA/car_v223_right-impact_v30/'
             file = os.path.join(folder, 'morris_n%i_output.md'%ntraj)
-            NREP = {5:6, 10:6, 20:4}  # number of repetitions of the morris analysis wrt number of trajectories
+            NREP = {5:6, 10:6, 20:6}  # number of repetitions of the morris analysis wrt number of trajectories
             nrep = NREP[ntraj]
                 
 
