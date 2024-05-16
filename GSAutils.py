@@ -379,7 +379,37 @@ class GatherMorris:
             if ii==0:
                 plt.title(self.outname)
         
+    
+    def plotRanking(self, figname=None, title=None, ticks=False):
+        """Plot input ranking for all the Morris repetitions
         
+        https://stackoverflow.com/questions/40887753/display-matrix-values-and-colormap
+        
+        :param str figname: name for the figure
+        """
+        matrix = np.flipud(self.indSort) + 1
+        nparam = matrix.shape[0]
+        nrepet = matrix.shape[1]
+        
+        fig, ax = plt.subplots(num=figname, figsize=(nrepet/3, nparam/3))
+        ax.matshow(matrix, cmap='viridis_r')
+        
+        plt.title(title)
+        plt.xlabel('repetition')
+        plt.ylabel('ranking')
+        if ticks:
+            plt.xticks(range(nrepet), np.arange(nrepet)+1)
+            plt.yticks(range(nparam), np.arange(nparam)+1)
+        else:
+            plt.xticks([])
+            plt.yticks([])
+        plt.box(False)
+        
+        for ii in range(nrepet):
+            for jj in range(nparam):
+                ax.text(ii, jj, str(matrix[jj,ii]), va='center', ha='center')
+        
+
 
 if __name__=="__main__":
     plt.close('all')
@@ -430,7 +460,7 @@ if __name__=="__main__":
     
     # %% Morris n5, n10 and n20 repetitions
     if True:
-        ntraj = 20
+        ntraj = 5
         model = 'v223'
         if model=='v222':
             # OLD MODEL
@@ -466,7 +496,5 @@ if __name__=="__main__":
             MO = GatherMorris(MOlist, 'rep', [ii for ii in range(len(MOlist))], outt)
             MO.plot2D(figname='morris_%i_%s'%(ntraj, outt))
             MO.subplot2D(figname='smorris_%i_%s'%(ntraj, outt))
+            MO.plotRanking(figname='rank_%i_%s'%(ntraj, outt))
             GM.append(MO)
-
-            np.savetxt(folder+'sortInd_%i_%s.csv'%(ntraj, outt),   MO.indSort,   '%i', delimiter=',')
-            np.savetxt(folder+'sortParam_%i_%s.csv'%(ntraj, outt), MO.paramSort, '%s', delimiter=',')
