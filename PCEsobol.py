@@ -24,6 +24,7 @@ Created on Fri Apr  5 11:03:36 2024
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import ticker
 # from matplotlib import pylab as plt
 import openturns as ot
 import openturns.viewer as viewer
@@ -199,8 +200,55 @@ class OpenTurnsPCESobol():
             plt.legend()
             if ylim:
                 plt.ylim([0,1]) 
-                
+    
+    
+    def plotRanking(self, figname=''):
+        """
         
+        :param str figname: base name for the figure (S1/ST and output name are added)
+        """
+        for oo in self.output:
+            iS1 = np.argsort(self.S1[oo]) + 1
+            iST = np.argsort(self.ST[oo]) + 1
+            S1 = np.sort(self.S1[oo])
+            ST = np.sort(self.ST[oo])
+
+            fn = '%s_%s_'%(figname, oo)
+            plotSobolRanking(iS1[::-1,np.newaxis], figname=fn+'S1',
+                             yticks=S1[::-1], xlabel='Sobol S1')
+            plotSobolRanking(iST[::-1,np.newaxis], figname=fn+'ST',
+                             yticks=ST[::-1], xlabel='Sobol ST')
+       
+
+def plotSobolRanking(matrix, figname=None, xlabel=None, yticks=None):
+    """
+    
+    """
+    nparam = matrix.shape[0]
+    nrepet = matrix.shape[1]
+    
+    fig, ax = plt.subplots(num=figname, figsize=(nrepet*1.5, nparam/3))
+    ax.matshow(matrix, cmap='viridis_r')
+    
+    # plt.title(title)
+    plt.xlabel(xlabel, ha='left')
+    plt.ylabel('ranking')
+    if yticks is not None:
+        plt.xticks([])
+        # ax.yaxis.set_major_formatter(ticker.FormatStrFormatter("%.2f"))
+        yticks = ['%.3f'%tt for tt in yticks]
+        plt.yticks(range(nparam), yticks)
+        ax.yaxis.tick_right()
+    else:
+        plt.xticks([])
+        plt.yticks([])
+    plt.box(False)
+    
+    for ii in range(nrepet):
+        for jj in range(nparam):
+            ax.text(ii, jj, str(matrix[jj,ii]), va='center', ha='center')
+
+
 
 if __name__=='__main__':
     plt.close('all')
@@ -215,9 +263,11 @@ if __name__=='__main__':
     if True:
         OTS120 = OpenTurnsPCESobol(ns=120)
         OTS120.plotS1ST(figname='S1ST', color='C0', label='LHS-120')
+        OTS120.plotRanking(figname='sobol120')
                 
         OTS330 = OpenTurnsPCESobol(ns=330)
         OTS330.plotS1ST(figname='S1ST', color='C2', label='LHS-330')
+        OTS120.plotRanking(figname='sobol330')
                 
         # TODO: metamodel quality
             

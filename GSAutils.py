@@ -386,8 +386,11 @@ class GatherMorris:
         https://stackoverflow.com/questions/40887753/display-matrix-values-and-colormap
         
         :param str figname: name for the figure
+        :param str title: title for the plot
+        :param bool ticks: 
         """
         matrix = np.flipud(self.indSort) + 1
+
         nparam = matrix.shape[0]
         nrepet = matrix.shape[1]
         
@@ -460,7 +463,7 @@ if __name__=="__main__":
     
     # %% Morris n5, n10 and n20 repetitions
     if True:
-        ntraj = 5
+        ntraj = 20
         model = 'v223'
         if model=='v222':
             # OLD MODEL
@@ -496,5 +499,5 @@ if __name__=="__main__":
             MO = GatherMorris(MOlist, 'rep', [ii for ii in range(len(MOlist))], outt)
             MO.plot2D(figname='morris_%i_%s'%(ntraj, outt))
             MO.subplot2D(figname='smorris_%i_%s'%(ntraj, outt))
-            MO.plotRanking(figname='rank_%i_%s'%(ntraj, outt))
+            MO.plotRanking(figname='rank_%i_%s'%(ntraj, outt), title='r=%i'%ntraj)
             GM.append(MO)
