@@ -84,13 +84,11 @@ class OpenTurnsPCESobol():
     
     """
     
-    def __init__(self, basepath='LHS/LHS-', ns=120, strategy='cleaning', q=0.4):
-        """Set the problem, inputs, outputs and compute PCE metamodel
+    def __init__(self, basepath='LHS/LHS-', ns=120):
+        """Set the problem, inputs and outputs
         
         :param str basepath: base path for the input and output files
         :param int ns: number of samples in the LHS DOE
-        :param str strategy: adaptive strategy ('fixed' or 'cleaning')
-        :param float q: q-quasi norm parameter. If not precised, q = 0.4. (see HyperbolicAnisotropicEnumerateFunction)
         """
         mm, mpa = 'mm', 'MPa'
         problem = {'names': ['tbumper', 'trailb', 'trailf', 'tgrill', 'thood',
@@ -106,14 +104,26 @@ class OpenTurnsPCESobol():
         self.input = problem['names']
         self.output = ('dmax', 'fmax', 'IE', 'vfin')
         
+        self.X = np.loadtxt('%s%i_X.csv'%(basepath, ns), delimiter=',')
+        self.Y = {}
+        for oo in self.output:
+            self.Y[oo] = np.loadtxt('%s%i_Y_%s.csv'%(basepath, ns, oo), delimiter=',')
+    
+    
+    def computeSobolIndices(self, strategy='cleaning', q=0.4,):
+        """Compute PCE metamodel and get Sobol indices
+        
+        :param str strategy: adaptive strategy ('fixed' or 'cleaning')
+        :param float q: q-quasi norm parameter. If not precised, q = 0.4. (see HyperbolicAnisotropicEnumerateFunction)
+        """
+        
         ot.ResourceMap.SetAsUnsignedInteger("FittingTest-LillieforsMaximumSamplingSize", 100)
 
         # Import X and Y
-        self.X = np.loadtxt('%s%i_X.csv'%(basepath, ns), delimiter=',')
         inputSample = ot.Sample(self.X)
         inputSample.setDescription(self.input)
 
-        distlist = [ot.Uniform(aa, bb) for (aa, bb) in problem['bounds']]
+        distlist = [ot.Uniform(aa, bb) for (aa, bb) in self.problem['bounds']]
         # distribution = ot.ComposedDistribution([ot.Uniform()]*len(self.input))
         distribution = ot.ComposedDistribution(distlist)
 
@@ -148,14 +158,12 @@ class OpenTurnsPCESobol():
             significanceFactor = 1e-4
             adaptiveStrategy = ot.CleaningStrategy(productBasis, maximumDimension, maximumSize, significanceFactor)
 
-        self.Y = {}
         self.chaosSI = {}
         self.metamodel = {}
         self.S1 = {}
         self.ST = {}
         for oo in self.output:
             print('='*20, oo, '='*20, '\n')
-            self.Y[oo] = np.loadtxt('%s%i_Y_%s.csv'%(basepath, ns, oo), delimiter=',')
             
             outputSample = ot.Sample(self.Y[oo][:,np.newaxis])
             outputSample.setDescription([oo])
@@ -262,10 +270,12 @@ if __name__=='__main__':
     #%% Openturns on LS-DYNA car simulation data
     if True:
         OTS120 = OpenTurnsPCESobol(ns=120)
+        OTS120.computeSobolIndices()
         OTS120.plotS1ST(figname='S1ST', color='C0', label='LHS-120')
         OTS120.plotRanking(figname='sobol120')
                 
         OTS330 = OpenTurnsPCESobol(ns=330)
+        OTS330.computeSobolIndices()
         OTS330.plotS1ST(figname='S1ST', color='C2', label='LHS-330')
         OTS120.plotRanking(figname='sobol330')
                 
