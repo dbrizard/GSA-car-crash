@@ -104,10 +104,26 @@ class OpenTurnsPCESobol():
         self.input = problem['names']
         self.output = ('dmax', 'fmax', 'IE', 'vfin')
         
+        # Import X and Y
         self.X = np.loadtxt('%s%i_X.csv'%(basepath, ns), delimiter=',')
         self.Y = {}
         for oo in self.output:
             self.Y[oo] = np.loadtxt('%s%i_Y_%s.csv'%(basepath, ns, oo), delimiter=',')
+        
+
+        # OpenTURNS variables and definitions 
+        ot.ResourceMap.SetAsUnsignedInteger("FittingTest-LillieforsMaximumSamplingSize", 100)
+        self.inputSample = ot.Sample(self.X)
+        self.inputSample.setDescription(self.input)
+        self.outputSample = {}
+        for oo in self.output:
+            self.outputSample[oo] = ot.Sample(self.Y[oo][:,np.newaxis])
+            self.outputSample[oo].setDescription([oo])
+            
+        distlist = [ot.Uniform(aa, bb) for (aa, bb) in self.problem['bounds']]
+        # distribution = ot.ComposedDistribution([ot.Uniform()]*len(self.input))
+        self.distribution = ot.ComposedDistribution(distlist)
+        
     
     
     def computeSobolIndices(self, strategy='cleaning', q=0.4,):
@@ -116,22 +132,11 @@ class OpenTurnsPCESobol():
         :param str strategy: adaptive strategy ('fixed' or 'cleaning')
         :param float q: q-quasi norm parameter. If not precised, q = 0.4. (see HyperbolicAnisotropicEnumerateFunction)
         """
-        
-        ot.ResourceMap.SetAsUnsignedInteger("FittingTest-LillieforsMaximumSamplingSize", 100)
-
-        # Import X and Y
-        inputSample = ot.Sample(self.X)
-        inputSample.setDescription(self.input)
-
-        distlist = [ot.Uniform(aa, bb) for (aa, bb) in self.problem['bounds']]
-        # distribution = ot.ComposedDistribution([ot.Uniform()]*len(self.input))
-        distribution = ot.ComposedDistribution(distlist)
-
 
         # https://openturns.github.io/openturns/latest/user_manual/response_surface/_generated/openturns.FixedStrategy.html#openturns.FixedStrategy
         polyColl = [0.0]*len(self.input)
-        for i in range(distribution.getDimension()):
-            polyColl[i] = ot.StandardDistributionPolynomialFactory(distribution.getMarginal(i))
+        for i in range(self.distribution.getDimension()):
+            polyColl[i] = ot.StandardDistributionPolynomialFactory(self.distribution.getMarginal(i))
         # enumerateFunction = ot.LinearEnumerateFunction(len(self.input))
         enumerateFunction = ot.HyperbolicAnisotropicEnumerateFunction(len(self.input), q)
         productBasis = ot.OrthogonalProductPolynomialFactory(polyColl, enumerateFunction)
@@ -164,13 +169,10 @@ class OpenTurnsPCESobol():
         self.ST = {}
         for oo in self.output:
             print('='*20, oo, '='*20, '\n')
-            
-            outputSample = ot.Sample(self.Y[oo][:,np.newaxis])
-            outputSample.setDescription([oo])
-            
             # PCE
             # ot.ResourceMap.SetAsUnsignedInteger("FunctionalChaosAlgorithm-MaximumTotalDegree", 15)
-            algo = ot.FunctionalChaosAlgorithm(inputSample, outputSample, distribution, adaptiveStrategy)
+            algo = ot.FunctionalChaosAlgorithm(
+                self.inputSample, self.outputSample[oo], self.distribution, adaptiveStrategy)
             algo.run()
             result = algo.getResult()
             self.metamodel[oo] = result.getMetaModel()
@@ -186,7 +188,38 @@ class OpenTurnsPCESobol():
         # val = ot.MetaModelValidation(X_test, Y_test, metamodel)
         # https://openturns.github.io/openturns/latest/auto_meta_modeling/polynomial_chaos_metamodel/plot_chaos_sobol_confidence.html#sphx-glr-auto-meta-modeling-polynomial-chaos-metamodel-plot-chaos-sobol-confidence-py
 
-    
+
+    def bootstrapSobolIndices(self, N, ):
+        """
+        
+        https://openturns.github.io/openturns/latest/auto_meta_modeling/polynomial_chaos_metamodel/plot_chaos_sobol_confidence.html#sphx-glr-auto-meta-modeling-polynomial-chaos-metamodel-plot-chaos-sobol-confidence-py
+        
+        :param int N: 
+        """
+        for oo in self.output:
+            X, Y = self.X, self.Y[oo]
+            X_boot, Y_boot = multiBootstrap(X, Y)
+            print(X_boot[:5])
+            print(Y_boot[:5])
+            
+            bootstrap_size = 500
+            fo_sample, to_sample = computeBootstrapChaosSobolIndices(
+                X, Y, basis, total_degree, distribution, bootstrap_size
+            )
+                    
+            fo_interval, to_interval = computeSobolIndicesConfidenceInterval(fo_sample, to_sample)
+        
+            graph = ot.SobolIndicesAlgorithm.DrawSobolIndices(
+                input_names,
+                fo_sample.computeMean(),
+                to_sample.computeMean(),
+                fo_interval,
+                to_interval,
+            )
+            graph.setTitle(f"Sobol' indices - N={N}")
+            graph.setIntegerXTick(True)
+                
+        
     def plotS1ST(self, figname='', color=None, label='', 
                  xmargin=0.3, xoffset=0.2, ylim=True):
         """Plot S1 and ST, for each output, on the same graph
@@ -255,6 +288,169 @@ def plotSobolRanking(matrix, figname=None, xlabel=None, yticks=None):
     for ii in range(nrepet):
         for jj in range(nparam):
             ax.text(ii, jj, str(matrix[jj,ii]), va='center', ha='center')
+
+
+#%% The following functions were taken from:
+# https://openturns.github.io/openturns/latest/auto_meta_modeling/polynomial_chaos_metamodel/plot_chaos_sobol_confidence.html#sphx-glr-auto-meta-modeling-polynomial-chaos-metamodel-plot-chaos-sobol-confidence-py
+
+def multiBootstrap(*data):
+    """
+    Bootstrap multiple samples at once.
+
+    Parameters
+    ----------
+    data : sequence of Sample
+        Multiple samples to bootstrap.
+
+    Returns
+    -------
+    data_boot : sequence of Sample
+        The bootstrap samples.
+    """
+    assert len(data) > 0, "empty list"
+    size = data[0].getSize()
+    selection = ot.BootstrapExperiment.GenerateSelection(size, size)
+    return [Z[selection] for Z in data]
+
+
+def computeChaosSensitivity(X, Y, basis, total_degree, distribution):
+    """
+    Compute the first and total order Sobol' indices from a polynomial chaos.
+
+    Parameters
+    ----------
+    X, Y : Sample
+        Input/Output design
+    basis : Basis
+        Tensorized basis
+    total_degree : int
+        Maximal total degree
+    distribution : Distribution
+        Input distribution
+
+    Returns
+    -------
+    first_order, total_order: list of float
+        The first and total order indices.
+    """
+    dim_input = X.getDimension()
+    result = computeSparseLeastSquaresChaos(X, Y, basis, total_degree, distribution)
+    chaosSI = ot.FunctionalChaosSobolIndices(result)
+    first_order = [chaosSI.getSobolIndex(i) for i in range(dim_input)]
+    total_order = [chaosSI.getSobolTotalIndex(i) for i in range(dim_input)]
+    return first_order, total_order
+
+
+def computeBootstrapChaosSobolIndices(
+    X, Y, basis, total_degree, distribution, bootstrap_size
+):
+    """
+    Computes a bootstrap sample of first and total order indices from polynomial chaos.
+
+    Parameters
+    ----------
+    X, Y : Sample
+        Input/Output design
+    basis : Basis
+        Tensorized basis
+    total_degree : int
+        Maximal total degree
+    distribution : Distribution
+        Input distribution
+    bootstrap_size : interval
+        The bootstrap sample size
+    """
+    dim_input = X.getDimension()
+    fo_sample = ot.Sample(0, dim_input)
+    to_sample = ot.Sample(0, dim_input)
+    unit_eps = ot.Interval([1e-9] * dim_input, [1 - 1e-9] * dim_input)
+    for i in range(bootstrap_size):
+        X_boot, Y_boot = multiBootstrap(X, Y)
+        first_order, total_order = computeChaosSensitivity(
+            X_boot, Y_boot, basis, total_degree, distribution
+        )
+        if unit_eps.contains(first_order) and unit_eps.contains(total_order):
+            fo_sample.add(first_order)
+            to_sample.add(total_order)
+    return fo_sample, to_sample
+
+
+def computeSobolIndicesConfidenceInterval(fo_sample, to_sample, alpha=0.95):
+    """
+    From a sample of first or total order indices,
+    compute a bilateral confidence interval of level alpha.
+
+    Estimates the distribution of the first and total order Sobol' indices
+    from a bootstrap estimation.
+    Then computes a bilateral confidence interval for each marginal.
+
+    Parameters
+    ----------
+    fo_sample: ot.Sample(n, dim_input)
+        The first order indices
+    to_sample: ot.Sample(n, dim_input)
+        The total order indices
+    alpha : float
+        The confidence level
+
+    Returns
+    -------
+    fo_interval : ot.Interval
+        The confidence interval of first order Sobol' indices
+    to_interval : ot.Interval
+        The confidence interval of total order Sobol' indices
+    """
+    dim_input = fo_sample.getDimension()
+    fo_lb = [0] * dim_input
+    fo_ub = [0] * dim_input
+    to_lb = [0] * dim_input
+    to_ub = [0] * dim_input
+    for i in range(dim_input):
+        fo_i = fo_sample[:, i]
+        to_i = to_sample[:, i]
+        beta = (1.0 - alpha) / 2
+        fo_lb[i] = fo_i.computeQuantile(beta)[0]
+        fo_ub[i] = fo_i.computeQuantile(1.0 - beta)[0]
+        to_lb[i] = to_i.computeQuantile(beta)[0]
+        to_ub[i] = to_i.computeQuantile(1.0 - beta)[0]
+
+    # Create intervals
+    fo_interval = ot.Interval(fo_lb, fo_ub)
+    to_interval = ot.Interval(to_lb, to_ub)
+    return fo_interval, to_interval
+
+
+def computeAndDrawSobolIndices(
+    N, basis, total_degree, distribution, bootstrap_size=500, alpha=0.95
+):
+    """
+    Compute and draw Sobol' indices from a polynomial chaos based on a
+    given sample size.
+    Compute confidence intervals at level alpha from bootstrap.
+    """
+    X = distribution.getSample(N)
+    Y = g(X)
+    fo_sample, to_sample = computeBootstrapChaosSobolIndices(
+        X, Y, basis, total_degree, distribution, bootstrap_size
+    )
+
+    fo_interval, to_interval = computeSobolIndicesConfidenceInterval(
+        fo_sample, to_sample, alpha
+    )
+
+    graph = ot.SobolIndicesAlgorithm.DrawSobolIndices(
+        input_names,
+        fo_sample.computeMean(),
+        to_sample.computeMean(),
+        fo_interval,
+        to_interval,
+    )
+    graph.setTitle(f"Sobol' indices - N={N}")
+    graph.setIntegerXTick(True)
+    return graph
+
+
+
 
 
 
