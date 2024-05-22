@@ -203,7 +203,7 @@ class OpenTurnsPCESobol():
         # https://openturns.github.io/openturns/latest/auto_meta_modeling/polynomial_chaos_metamodel/plot_chaos_sobol_confidence.html#sphx-glr-auto-meta-modeling-polynomial-chaos-metamodel-plot-chaos-sobol-confidence-py
 
 
-    def computeBootstrapChaosSobolIndices(self, bootstrap_size, verbose=True):
+    def computeBootstrapChaosSobolIndices(self, bootstrap_size, pick=False, verbose=True):
         """
         Computes a bootstrap sample of first and total order indices from polynomial chaos.
         
@@ -211,6 +211,7 @@ class OpenTurnsPCESobol():
 
     
         :param interval bootstrap_size: The bootstrap sample size
+        :param bool pick: discard indices when 0 or 1
         :param bool verbose: tell human where computer is
         """
         X = self.inputSample
@@ -227,12 +228,20 @@ class OpenTurnsPCESobol():
             fo_sample = ot.Sample(0, dim_input)
             to_sample = ot.Sample(0, dim_input)
             unit_eps = ot.Interval([1e-9] * dim_input, [1 - 1e-9] * dim_input)
-            for i in range(bootstrap_size):
+            for ii in range(bootstrap_size):
+                if verbose and ii%20==0:
+                    print('bootstrap %i/%i'%(ii, bootstrap_size))
                 X_boot, Y_boot = multiBootstrap(X, Y)
                 first_order, total_order = self._computeChaosSensitivity(X_boot, Y_boot)
-                if unit_eps.contains(first_order) and unit_eps.contains(total_order):
+                if pick:
+                    # do not add to sample if any first_order or total_order is 0.0
+                    if unit_eps.contains(first_order) and unit_eps.contains(total_order):
+                        fo_sample.add(first_order)
+                        to_sample.add(total_order)
+                else:
                     fo_sample.add(first_order)
-                    to_sample.add(total_order)
+                    to_sample.add(total_order)                    
+
             # compute confidence intervals
             fo_interval, to_interval = computeSobolIndicesConfidenceInterval(fo_sample, to_sample)
             # Store
@@ -263,6 +272,9 @@ class OpenTurnsPCESobol():
             )
             graph.setTitle(f"Sobol' indices: {oo}")
             _ = viewer.View(graph)
+            
+        
+        print('plot by myself to see if identical')
                 
         
     def plotS1ST(self, figname='', color=None, label='', 
@@ -425,7 +437,7 @@ if __name__=='__main__':
         OTS330.plotS1ST(figname='S1ST', color='C2', label='LHS-330')
         OTS330.plotRanking(figname='sobol330')
             
-        OTS330.computeBootstrapChaosSobolIndices(40)  # influence de N ???
+        OTS330.computeBootstrapChaosSobolIndices(1000)  # influence de N ???
         OTS330.plotS1STbootstrap()
         # TODO: metamodel quality
             
