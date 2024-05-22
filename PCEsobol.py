@@ -123,12 +123,29 @@ class OpenTurnsPCESobol():
         distlist = [ot.Uniform(aa, bb) for (aa, bb) in self.problem['bounds']]
         # distribution = ot.ComposedDistribution([ot.Uniform()]*len(self.input))
         self.distribution = ot.ComposedDistribution(distlist)
-        
     
     
-    def computeSobolIndices(self, strategy='cleaning', q=0.4,):
-        """Compute PCE metamodel and get Sobol indices
+    def computeChaosSensitivity(self, strategy='cleaning', q=0.4):
+        """Compute PCE metamodel and get Sobol indices for all outputs
+
+        :param str strategy: adaptive strategy ('fixed' or 'cleaning')
+        :param float q: q-quasi norm parameter. If not precised, q = 0.4. (see HyperbolicAnisotropicEnumerateFunction)
+        """
+        self.chaosSI = {}
+        self.metamodel = {}
+        self.S1 = {}
+        self.ST = {}
+        for oo in self.output:
+            print('='*20, oo, '='*20, '\n')
+            self.S1[oo], self.ST[oo] = self._computeChaosSensitivity(self.inputSample, self.outputSample[oo], strategy=strategy, q=q, verbose=True)
+            
+    
+    def _computeChaosSensitivity(self, inputSample, outputSample, 
+                                 strategy='cleaning', q=0.4, verbose=False):
+        """Compute PCE metamodel and return Sobol indices for a specific output
         
+        :param Sample inputSample: 
+        :param Sample outputSample: 
         :param str strategy: adaptive strategy ('fixed' or 'cleaning')
         :param float q: q-quasi norm parameter. If not precised, q = 0.4. (see HyperbolicAnisotropicEnumerateFunction)
         """
@@ -163,30 +180,68 @@ class OpenTurnsPCESobol():
             significanceFactor = 1e-4
             adaptiveStrategy = ot.CleaningStrategy(productBasis, maximumDimension, maximumSize, significanceFactor)
 
-        self.chaosSI = {}
-        self.metamodel = {}
-        self.S1 = {}
-        self.ST = {}
-        for oo in self.output:
-            print('='*20, oo, '='*20, '\n')
-            # PCE
-            # ot.ResourceMap.SetAsUnsignedInteger("FunctionalChaosAlgorithm-MaximumTotalDegree", 15)
-            algo = ot.FunctionalChaosAlgorithm(
-                self.inputSample, self.outputSample[oo], self.distribution, adaptiveStrategy)
-            algo.run()
-            result = algo.getResult()
-            self.metamodel[oo] = result.getMetaModel()
-            
-            self.chaosSI[oo] = ot.FunctionalChaosSobolIndices(result)
-            print(self.chaosSI[oo].summary())
+
+        oo = outputSample.getDescription()[0]
+        # PCE
+        # ot.ResourceMap.SetAsUnsignedInteger("FunctionalChaosAlgorithm-MaximumTotalDegree", 15)
+        algo = ot.FunctionalChaosAlgorithm(
+            inputSample, outputSample, self.distribution, adaptiveStrategy)
+        algo.run()
+        result = algo.getResult()
+        self.metamodel[oo] = result.getMetaModel()
         
-            self.S1[oo] = [self.chaosSI[oo].getSobolIndex(ii) for ii in range(len(self.input))]
-            self.ST[oo] = [self.chaosSI[oo].getSobolTotalIndex(ii) for ii in range(len(self.input))]
+        self.chaosSI[oo] = ot.FunctionalChaosSobolIndices(result)
+        if verbose:
+            print(self.chaosSI[oo].summary())
     
+        S1 = [self.chaosSI[oo].getSobolIndex(ii) for ii in range(len(self.input))]
+        ST = [self.chaosSI[oo].getSobolTotalIndex(ii) for ii in range(len(self.input))]
+        return S1, ST
     
         # XXX Metamodel validation
         # val = ot.MetaModelValidation(X_test, Y_test, metamodel)
         # https://openturns.github.io/openturns/latest/auto_meta_modeling/polynomial_chaos_metamodel/plot_chaos_sobol_confidence.html#sphx-glr-auto-meta-modeling-polynomial-chaos-metamodel-plot-chaos-sobol-confidence-py
+
+
+    def computeBootstrapChaosSobolIndices(self, bootstrap_size, verbose=True):
+        """
+        Computes a bootstrap sample of first and total order indices from polynomial chaos.
+    
+        Parameters
+        ----------
+        X, Y : Sample
+            Input/Output design
+        basis : Basis
+            Tensorized basis
+        total_degree : int
+            Maximal total degree
+        distribution : Distribution
+            Input distribution
+        bootstrap_size : interval
+            The bootstrap sample size
+        """
+        X = self.inputSample
+        dim_input = X.getDimension()
+
+        FO = {}
+        TO = {}
+        for oo in self.output:
+            if verbose:
+                print('*'*20, oo, '*'*20, '\n')
+            Y = self.outputSample[oo]
+            fo_sample = ot.Sample(0, dim_input)
+            to_sample = ot.Sample(0, dim_input)
+            unit_eps = ot.Interval([1e-9] * dim_input, [1 - 1e-9] * dim_input)
+            for i in range(bootstrap_size):
+                X_boot, Y_boot = multiBootstrap(X, Y)
+                first_order, total_order = self._computeChaosSensitivity(X_boot, Y_boot)
+                if unit_eps.contains(first_order) and unit_eps.contains(total_order):
+                    fo_sample.add(first_order)
+                    to_sample.add(total_order)
+            FO[oo] = fo_sample
+            TO[oo] = to_sample
+        self.bootstrap = {'FO':FO, 'TO':TO}
+        # return fo_sample, to_sample
 
 
     def bootstrapSobolIndices(self, N, ):
@@ -466,12 +521,12 @@ if __name__=='__main__':
     #%% Openturns on LS-DYNA car simulation data
     if True:
         OTS120 = OpenTurnsPCESobol(ns=120)
-        OTS120.computeSobolIndices()
+        OTS120.computeChaosSensitivity()
         OTS120.plotS1ST(figname='S1ST', color='C0', label='LHS-120')
         OTS120.plotRanking(figname='sobol120')
                 
         OTS330 = OpenTurnsPCESobol(ns=330)
-        OTS330.computeSobolIndices()
+        OTS330.computeChaosSensitivity()
         OTS330.plotS1ST(figname='S1ST', color='C2', label='LHS-330')
         OTS120.plotRanking(figname='sobol330')
                 
