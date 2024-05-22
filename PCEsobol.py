@@ -203,7 +203,7 @@ class OpenTurnsPCESobol():
         # https://openturns.github.io/openturns/latest/auto_meta_modeling/polynomial_chaos_metamodel/plot_chaos_sobol_confidence.html#sphx-glr-auto-meta-modeling-polynomial-chaos-metamodel-plot-chaos-sobol-confidence-py
 
 
-    def computeBootstrapChaosSobolIndices(self, bootstrap_size, verbose=True, plot=True):
+    def computeBootstrapChaosSobolIndices(self, bootstrap_size, verbose=True):
         """
         Computes a bootstrap sample of first and total order indices from polynomial chaos.
         
@@ -212,7 +212,6 @@ class OpenTurnsPCESobol():
     
         :param interval bootstrap_size: The bootstrap sample size
         :param bool verbose: tell human where computer is
-        :param bool plot: plot S_1 and S_T (one figure per output)
         """
         X = self.inputSample
         dim_input = X.getDimension()
@@ -241,47 +240,29 @@ class OpenTurnsPCESobol():
             TO[oo] = to_sample
             FOI[oo] = fo_interval
             TOI[oo] = to_interval
-            
-            if plot:
-                graph = ot.SobolIndicesAlgorithm.DrawSobolIndices(
-                    self.inputSample.getDescription(),
-                    fo_sample.computeMean(),
-                    to_sample.computeMean(),
-                    fo_interval,
-                    to_interval,
-                )
+        
         self.bootstrap = {'FO':FO, 'TO':TO, 'FOI':FOI, 'TOI':TOI}
 
 
-    def bootstrapSobolIndices(self, N, ):
+    def plotS1STbootstrap(self, figname=''):
         """
         
-        https://openturns.github.io/openturns/latest/auto_meta_modeling/polynomial_chaos_metamodel/plot_chaos_sobol_confidence.html#sphx-glr-auto-meta-modeling-polynomial-chaos-metamodel-plot-chaos-sobol-confidence-py
-        
-        :param int N: 
         """
         for oo in self.output:
-            X, Y = self.X, self.Y[oo]
-            X_boot, Y_boot = multiBootstrap(X, Y)
-            print(X_boot[:5])
-            print(Y_boot[:5])
+            fo_sample = self.bootstrap['FO'][oo]
+            to_sample = self.bootstrap['FO'][oo]
+            fo_interval = self.bootstrap['FOI'][oo]
+            to_interval = self.bootstrap['TOI'][oo]
             
-            bootstrap_size = 500
-            fo_sample, to_sample = computeBootstrapChaosSobolIndices(
-                X, Y, basis, total_degree, distribution, bootstrap_size
-            )
-                    
-            fo_interval, to_interval = computeSobolIndicesConfidenceInterval(fo_sample, to_sample)
-        
             graph = ot.SobolIndicesAlgorithm.DrawSobolIndices(
-                input_names,
+                self.inputSample.getDescription(),
                 fo_sample.computeMean(),
                 to_sample.computeMean(),
                 fo_interval,
                 to_interval,
             )
-            graph.setTitle(f"Sobol' indices - N={N}")
-            graph.setIntegerXTick(True)
+            graph.setTitle(f"Sobol' indices: {oo}")
+            _ = viewer.View(graph)
                 
         
     def plotS1ST(self, figname='', color=None, label='', 
@@ -444,7 +425,8 @@ if __name__=='__main__':
         OTS330.plotS1ST(figname='S1ST', color='C2', label='LHS-330')
         OTS330.plotRanking(figname='sobol330')
             
-        OTS330.computeBootstrapChaosSobolIndices(40)
+        OTS330.computeBootstrapChaosSobolIndices(40)  # influence de N ???
+        OTS330.plotS1STbootstrap()
         # TODO: metamodel quality
             
     
