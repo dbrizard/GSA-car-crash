@@ -259,7 +259,7 @@ class OpenTurnsPCESobol():
         """
         for oo in self.output:
             fo_sample = self.bootstrap['FO'][oo]
-            to_sample = self.bootstrap['FO'][oo]
+            to_sample = self.bootstrap['TO'][oo]
             fo_interval = self.bootstrap['FOI'][oo]
             to_interval = self.bootstrap['TOI'][oo]
             
@@ -271,7 +271,8 @@ class OpenTurnsPCESobol():
                 to_interval,
             )
             graph.setTitle(f"Sobol' indices: {oo}")
-            _ = viewer.View(graph)
+            fig = plt.figure('%s-%s'%(figname, oo))
+            _ = viewer.View(graph, figure=fig)
             
         
         print('plot by myself to see if identical')
@@ -431,14 +432,18 @@ if __name__=='__main__':
         OTS120.computeChaosSensitivity()
         OTS120.plotS1ST(figname='S1ST', color='C0', label='LHS-120')
         OTS120.plotRanking(figname='sobol120')
+            
+        OTS120.computeBootstrapChaosSobolIndices(50)  # influence de N ???
+        OTS120.plotS1STbootstrap(figname='bootstrap120')
+
                 
         OTS330 = OpenTurnsPCESobol(ns=330)
         OTS330.computeChaosSensitivity()
         OTS330.plotS1ST(figname='S1ST', color='C2', label='LHS-330')
         OTS330.plotRanking(figname='sobol330')
             
-        OTS330.computeBootstrapChaosSobolIndices(1000)  # influence de N ???
-        OTS330.plotS1STbootstrap()
+        OTS330.computeBootstrapChaosSobolIndices(50)  # influence de N ???
+        OTS330.plotS1STbootstrap(figname='bootstrap')
         # TODO: metamodel quality
             
     
