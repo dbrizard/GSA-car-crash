@@ -335,7 +335,7 @@ class GatherMorris:
         #     plt.plot(X, sigma)
 
 
-    def plot2D(self, figname=None, conf=True, pointID=True):
+    def plot2D(self, figname=None, conf=True, pointID=True, xlim0=True):
         """Gather sigma vs mu_star plots for all the values of param
         
         :param str figname: name for the figure
@@ -360,6 +360,8 @@ class GatherMorris:
         plt.legend()
         plt.xlabel('$\\mu^*$')
         plt.ylabel('$\\sigma$')
+        if xlim0:
+            plt.xlim(xmin=0)
         
     
     def subplot2D(self, figname=None, figsize=(19.2, 4.8), conf=False, margin=1.05):
@@ -463,7 +465,7 @@ if __name__=="__main__":
     
     # %% Morris n5, n10 and n20 repetitions
     if True:
-        ntraj = 20
+        ntraj = 5
         model = 'v223'
         if model=='v222':
             # OLD MODEL
