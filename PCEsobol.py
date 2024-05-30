@@ -301,7 +301,6 @@ class OpenTurnsPCESobol():
                 plt.title(f"Sobol' indices: {oo}")
                 # plt.box(False)
         
-        print('plot by myself to see if identical')
                 
         
     def plotS1ST(self, figname='', color=None, label='', 
@@ -453,35 +452,40 @@ if __name__=='__main__':
 
 
     #%% Openturns on LS-DYNA car simulation data
+    bs = 500
     if True:
         OTS50 = OpenTurnsPCESobol(ns=50)
         OTS50.computeChaosSensitivity()
         OTS50.plotS1ST(figname='S1ST', color='C0', label='LHS-50')
-        OTS50.plotRanking(figname='sobol50')
-        bs = 2000
+        # OTS50.plotRanking(figname='sobol50')
         OTS50.computeBootstrapChaosSobolIndices(bs)  # influence de N ???
         OTS50.plotS1STbootstrap(figname='STS1-50-bs%i'%bs)
         
-    if False:
+    if True:
         OTS120 = OpenTurnsPCESobol(ns=120)
         OTS120.computeChaosSensitivity()
-        OTS120.plotS1ST(figname='S1ST', color='C0', label='LHS-120')
-        OTS120.plotRanking(figname='sobol120')
+        OTS120.plotS1ST(figname='S1ST', color='C1', label='LHS-120')
+        # OTS120.plotRanking(figname='sobol120')
             
-        OTS120.computeBootstrapChaosSobolIndices(2000)  # influence de N ???
-        OTS120.plotS1STbootstrap(figname='STS1-120-bs2000')
+        OTS120.computeBootstrapChaosSobolIndices(bs)  # influence de N ???
+        OTS120.plotS1STbootstrap(figname='STS1-120-bs%i'%bs)
 
     
-    if False:
+    if True:
         OTS330 = OpenTurnsPCESobol(ns=330)
         OTS330.computeChaosSensitivity()
         OTS330.plotS1ST(figname='S1ST', color='C2', label='LHS-330')
-        OTS330.plotRanking(figname='sobol330')
+        # OTS330.plotRanking(figname='sobol330')
             
-        OTS330.computeBootstrapChaosSobolIndices(2000)  # influence de N ???
-        OTS330.plotS1STbootstrap(figname='STS1-330-bs2000')
+        OTS330.computeBootstrapChaosSobolIndices(bs)  # influence de N ???
+        OTS330.plotS1STbootstrap(figname='STS1-330-bs%i'%bs)
         # TODO: metamodel quality
-            
+    
+    if True:
+        OTS50.plotS1STbootstrap(figname='STS1-50-120-330_bs%i'%bs, xST1=0.07)
+        OTS120.plotS1STbootstrap(figname='STS1-50-120-330_bs%i'%bs, xST1=0.07, xoffset=0.3)
+        OTS330.plotS1STbootstrap(figname='STS1-50-120-330_bs%i'%bs, xST1=0.07, xoffset=0.6)
+        
     
     #%% Openturns example
     if False:
