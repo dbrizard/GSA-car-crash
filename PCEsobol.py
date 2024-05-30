@@ -253,9 +253,15 @@ class OpenTurnsPCESobol():
         self.bootstrap = {'FO':FO, 'TO':TO, 'FOI':FOI, 'TOI':TOI}
 
 
-    def plotS1STbootstrap(self, figname=''):
+    def plotS1STbootstrap(self, figname='', method='mine', 
+                          xmargin=0.2, xoffset=0, xST1=0.1, labelsuffix=''):
         """
         
+        :param str figname: prefix for figure name
+        :param str method: plotting method ('OT' for OpenTURNS, otherwise mine)
+        :param float xmargin: left and right margin around x axis
+        :param float xoffset: additionnal x offset (for overlay purpose)
+        :param float xSTS1: x offset between ST and S1
         """
         for oo in self.output:
             fo_sample = self.bootstrap['FO'][oo]
@@ -263,17 +269,37 @@ class OpenTurnsPCESobol():
             fo_interval = self.bootstrap['FOI'][oo]
             to_interval = self.bootstrap['TOI'][oo]
             
-            graph = ot.SobolIndicesAlgorithm.DrawSobolIndices(
-                self.inputSample.getDescription(),
-                fo_sample.computeMean(),
-                to_sample.computeMean(),
-                fo_interval,
-                to_interval,
-            )
-            graph.setTitle(f"Sobol' indices: {oo}")
-            fig = plt.figure('%s-%s'%(figname, oo))
-            _ = viewer.View(graph, figure=fig)
-            
+            if method=='OT':
+                graph = ot.SobolIndicesAlgorithm.DrawSobolIndices(
+                    self.inputSample.getDescription(),
+                    fo_sample.computeMean(),
+                    to_sample.computeMean(),
+                    fo_interval,
+                    to_interval,
+                )
+                graph.setTitle(f"Sobol' indices: {oo}")
+                fig = plt.figure('%s-%s'%(figname, oo))
+                _ = viewer.View(graph, figure=fig)
+            else:
+                x = np.arange(len(self.input)) + 1
+                plt.figure('%s-%s'%(figname, oo))
+                # ST
+                ST = to_sample.computeMean()
+                STerr = np.vstack((ST-to_interval.getLowerBound(), to_interval.getUpperBound()-ST))
+                plt.errorbar(x+xoffset, ST, yerr=STerr, label='ST'+labelsuffix,
+                             marker='o', elinewidth=2, linestyle='')
+                # S1
+                S1 = fo_sample.computeMean()
+                S1err = np.vstack((S1-fo_interval.getLowerBound(), fo_interval.getUpperBound()-S1))
+                plt.errorbar(x+xST1+xoffset, S1, yerr=S1err, label='S1'+labelsuffix,
+                             marker='x', elinewidth=2, linestyle='')
+                # graph tuning                
+                plt.xlim(xmin=x.min()-xmargin, xmax=x.max()+xmargin)
+                plt.xticks(x, self.input, rotation=30)
+                plt.ylim((0,1))
+                plt.legend()
+                plt.title(f"Sobol' indices: {oo}")
+                # plt.box(False)
         
         print('plot by myself to see if identical')
                 
@@ -428,22 +454,32 @@ if __name__=='__main__':
 
     #%% Openturns on LS-DYNA car simulation data
     if True:
+        OTS50 = OpenTurnsPCESobol(ns=50)
+        OTS50.computeChaosSensitivity()
+        OTS50.plotS1ST(figname='S1ST', color='C0', label='LHS-50')
+        OTS50.plotRanking(figname='sobol50')
+        bs = 2000
+        OTS50.computeBootstrapChaosSobolIndices(bs)  # influence de N ???
+        OTS50.plotS1STbootstrap(figname='STS1-50-bs%i'%bs)
+        
+    if False:
         OTS120 = OpenTurnsPCESobol(ns=120)
         OTS120.computeChaosSensitivity()
         OTS120.plotS1ST(figname='S1ST', color='C0', label='LHS-120')
         OTS120.plotRanking(figname='sobol120')
             
-        OTS120.computeBootstrapChaosSobolIndices(50)  # influence de N ???
-        OTS120.plotS1STbootstrap(figname='bootstrap120')
+        OTS120.computeBootstrapChaosSobolIndices(2000)  # influence de N ???
+        OTS120.plotS1STbootstrap(figname='STS1-120-bs2000')
 
-                
+    
+    if False:
         OTS330 = OpenTurnsPCESobol(ns=330)
         OTS330.computeChaosSensitivity()
         OTS330.plotS1ST(figname='S1ST', color='C2', label='LHS-330')
         OTS330.plotRanking(figname='sobol330')
             
-        OTS330.computeBootstrapChaosSobolIndices(50)  # influence de N ???
-        OTS330.plotS1STbootstrap(figname='bootstrap')
+        OTS330.computeBootstrapChaosSobolIndices(2000)  # influence de N ???
+        OTS330.plotS1STbootstrap(figname='STS1-330-bs2000')
         # TODO: metamodel quality
             
     
