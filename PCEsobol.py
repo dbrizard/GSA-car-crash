@@ -482,9 +482,9 @@ if __name__=='__main__':
         # TODO: metamodel quality
     
     if True:
-        OTS50.plotS1STbootstrap(figname='STS1-50-120-330_bs%i'%bs, xST1=0.07)
-        OTS120.plotS1STbootstrap(figname='STS1-50-120-330_bs%i'%bs, xST1=0.07, xoffset=0.3)
-        OTS330.plotS1STbootstrap(figname='STS1-50-120-330_bs%i'%bs, xST1=0.07, xoffset=0.6)
+        OTS50.plotS1STbootstrap( figname='STS1-50-120-330_bs%i'%bs, labelsuffix='-50', xST1=0.07)
+        OTS120.plotS1STbootstrap(figname='STS1-50-120-330_bs%i'%bs, labelsuffix='-120', xST1=0.07, xoffset=0.2)
+        OTS330.plotS1STbootstrap(figname='STS1-50-120-330_bs%i'%bs, labelsuffix='-330', xST1=0.07, xoffset=0.4)
         
     
     #%% Openturns example
