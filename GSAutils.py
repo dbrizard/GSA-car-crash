@@ -465,7 +465,7 @@ if __name__=="__main__":
     
     # %% Morris n5, n10 and n20 repetitions
     if True:
-        ntraj = 5
+        ntraj = 20
         model = 'v223'
         if model=='v222':
             # OLD MODEL
