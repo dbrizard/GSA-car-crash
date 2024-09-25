@@ -318,7 +318,7 @@ class GatherMorris:
                 plt.errorbar(X, mu_star, yerr=mu_star_conf, label=pp,
                              capsize=3, marker='.')
             else:
-                plt.plot(X, mu_star, label=pp)
+                plt.plot(X, mu_star, '.-', label=pp)
             
             plt.legend()
             plt.xlabel(self.param['name'])
