@@ -49,31 +49,35 @@ if __name__=="__main__":
     plt.close('all')
 
 
-    #%% ISHIGAMI
+    #%% REPEAT MORRIS ANALYSIS
     if True:
-        funcname = 'Sobol_G'        
-        nTraj = 5  # number of trajectories
-        nRep = 100
+        # Choose benchmark functino here
+        funcname = 'BratleyB'        
+        nTraj = 20  # number of trajectories for the Morris analysis
+        nRep = 100  # number of repetitions of the Morris analyses
         
         # Define the model inputs and function
         if funcname=='Ishigami':
-            func = Ishigami.evaluate
-            problem = {
-                'num_vars': 3,
-                'names': ['x1', 'x2', 'x3'],
-                'bounds': [[-3.14159265359, 3.14159265359],
-                           [-3.14159265359, 3.14159265359],
-                           [-3.14159265359, 3.14159265359]],
-                'groups':None}  # required for Morris method
-        elif funcname=='Sobol_G*8':
-            func = Sobol_G.evaluate  #a = np.array([0, 1, 4.5, 9, 99, 99, 99, 99])
-            problem = {'num_vars':8, 'names':['x%i'%(ii+1) for ii in range(8)],
-                       'bounds':[[0, 1]]*8, 'groups':None}
-        elif funcname=='Sobol_G':
-            dim = 6
-            func = uqtf.SobolG(spatial_dimension=dim)
+            func = uqtf.Ishigami()
+            problem = {'num_vars': 3, 'names': ['x1', 'x2', 'x3'],
+                       'bounds': [[-np.pi, np.pi]]*3, 'groups':None}  # required for Morris method
+        else:
+            if funcname=='Sobol_G*':
+                dim = 8
+                func = Sobol_G.evaluate  #a = np.array([0, 1, 4.5, 9, 99, 99, 99, 99])
+            elif funcname=='Sobol_G':
+                dim = 6
+                func = uqtf.SobolG(spatial_dimension=dim)
+            # elif funcname=='Friedman6D':
+            #     dim = 6
+            #     func = uqtf.Friedman6D  # apprears in the doc but not available
+            elif funcname=='BratleyB':
+                dim = 8
+                func = uqtf.Bratley1992b(spatial_dimension=dim)
             problem = {'num_vars':dim, 'names':['x%i'%(ii+1) for ii in range(dim)],
                        'bounds':[[0, 1]]*dim, 'groups':None}
+
+                
                         
         # Repeat the analysis
         MOlist = []
@@ -92,7 +96,3 @@ if __name__=="__main__":
         GM.plot2D(conf=False)
         GM.plot(conf=False)
         GM.plotRanking()
-
-
-        
-        

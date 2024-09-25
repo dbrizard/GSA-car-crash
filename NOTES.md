@@ -29,7 +29,7 @@ OpenTURNS has:
 
 
 ### Why not do things in R??
-We have the `sensitivity` package
+We have the `sensitivity` package...
 
 
 ### GSA toolboxes in Python
@@ -43,9 +43,13 @@ We have the `sensitivity` package
 ### CONCLUSION
 Should do first tests with SALib.
 
-## 2024/09/24
+## 24/09/2024
 Following biblio from `UQTestFuns` JOSS paper, installed with pip
 - `Successfully installed pyDOE2-1.3.0 **smt-1.3.0**`
 
 `UQTestFuns` installed in `python38` venv
 Did not install `pyapprox` as it requires `torch` and is very heavy in memory (too much download !!)
+
+## 25/09/2024
+Number of interesting functions in `UQTestFuns` is limited if I only want uniform distribution inputs.
+16 GSA related functions. 
