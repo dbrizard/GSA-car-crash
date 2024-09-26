@@ -1,6 +1,6 @@
 # Side notes related to the project
 
-## 2024/09/20 Test functions
+## 20/09/2024 Test functions
 ### Available test functions
 [Virtual Library of Simulation Experiments: Test Functions and Datasets](https://www.sfu.ca/~ssurjano/index.html)
 [UQTestFuns](https://github.com/damar-wicaksono/uqtestfuns) requires Python 3.7, currently running 3.6.8...

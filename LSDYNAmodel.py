@@ -451,16 +451,17 @@ class CAR6model(LSDYNAmodel):
         
         
     
-    def runGSA(self, N=10, meth='morris', compute=True):
+    def runGSA(self, N=10, meth='morris', prob=9, compute=True):
         """Run simulations for Global Sensitivity Analysis 
         
         
         :param int N: number of trajectories for 'morris', number of XX for 'sobol'
         :param str meth: GSA method ('morris', 'sobol')
-        :param bool compute: run LS-DYNA or not
+        :param bool compute: effectively run LS-DYNA or not
         """
         mm = 'mm'
         mpa = 'MPa'
+        fixedparam = {}
         # Define parameters and bounds
         if self.kfile['basename']=='main_v222.k':
             problem = {'names': ['tbumper', 'troof', 'trailb', 'trailf', 'tgrill', 'thood'],
@@ -471,16 +472,26 @@ class CAR6model(LSDYNAmodel):
                        # 'dists': ['unif', 'lognorm', 'triang']
                        }
         elif self.kfile['basename']=='main_v223.k':
-            problem = {'names': ['tbumper', 'trailb', 'trailf', 'tgrill', 'thood',
-                                 'ybumper', 'yrailf', 'yrailb', 'ybody'],
-                       'units': [mm, mm, mm, mm, mm,
-                                 mpa, mpa, mpa, mpa],
-                       'num_vars': 9,
-                       'bounds': [[2, 4], [1,3], [3,7], [0.5,1.5], [0.5, 1.5],
-                                  [300, 500], [300, 500], [300, 500], [300, 500]],
-                       # 'groups': ['G1', 'G2', 'G1'], # Sobol and Morris only. See Advanced Examples.
-                       # 'dists': ['unif', 'lognorm', 'triang']
-                       }            
+            if prob==9:
+                # 9 parameters problem
+                problem = {'names': ['tbumper', 'trailb', 'trailf', 'tgrill', 'thood',
+                                     'ybumper', 'yrailf', 'yrailb', 'ybody'],
+                           'units': [mm, mm, mm, mm, mm,
+                                     mpa, mpa, mpa, mpa],
+                           'num_vars': 9,
+                           'bounds': [[2, 4], [1,3], [3,7], [0.5,1.5], [0.5, 1.5],
+                                      [300, 500], [300, 500], [300, 500], [300, 500]],
+                           # 'groups': ['G1', 'G2', 'G1'], # Sobol and Morris only. See Advanced Examples.
+                           # 'dists': ['unif', 'lognorm', 'triang']
+                           }
+            elif prob==4:
+                # 4 parameters problem
+                problem = {'names': ['tbumper', 'trailb', 'trailf', 'yrailf'],
+                           'units': [mm]*3 + [mpa],
+                           'num_vars':4,
+                           'bounds': [[2,4], [1,3], [3,7], [300,500]]}
+                fixedparam = {'tgrill':1, 'thood':1, 'ybumper':400, 'yrailb':400, 'ybody':400}
+                    
                 
         # Generate samples
         print("="*50)
@@ -504,6 +515,7 @@ class CAR6model(LSDYNAmodel):
         for ii, xx in enumerate(X):
             print("Simulation # %i/%i"%(ii+1, len(X)))
             pdict = dict(zip(problem['names'], xx))
+            pdict.update(fixedparam)
             self.overrideParam(pdict)
             self.run(compute=compute)
             # get outputs
@@ -711,15 +723,15 @@ if __name__=="__main__":
     
     
     #%% RUN MORRIS GSA
-    if False:
+    if True:
         CAR = CAR6model('./lsopt_car6_v3/main_v223.k')
         # CAR.run(compute=True)
-        CAR.runGSA(N=20, meth='morris', compute=True)
+        CAR.runGSA(N=5, meth='morris', prob=4, compute=True)
         CAR.plotGSAmorris()
         CAR.plotXYvalues()
 
     #%% RUN LHS DOE FOR PCE SOBOL
-    if True:
+    if False:
         CAR = CAR6model('./lsopt_car6_v3/main_v223.k')
         CAR.runGSA(N=50, meth='lhs', compute=True)
         CAR.saveGSA('LHS_50', meth='lhs')
