@@ -465,8 +465,8 @@ if __name__=="__main__":
     
     # %% Morris n5, n10 and n20 repetitions
     if True:
-        ntraj = 20
-        model = 'v223'
+        ntraj = 5
+        model = 'v223_4'
         if model=='v222':
             # OLD MODEL
             offset = [0, 9, 18, 27]  # offset to fecht results for each output variable
@@ -487,9 +487,19 @@ if __name__=="__main__":
             file = os.path.join(folder, 'morris_n%i_output.md'%ntraj)
             NREP = {5:6, 10:6, 20:6}  # number of repetitions of the morris analysis wrt number of trajectories
             nrep = NREP[ntraj]
+            ffolder = 'GSA/car_v223_right-impact_v30/gathermorris/'  # folder for saving fig output
+        elif model=='v223_4':
+            # CURRENT MODEL but 4 param instead of 9
+            offset = [0, 7, 14, 21]  # offset to fecht results for each output variable
+            nlignes = 31  # number of lignes for 1 set of morris indices for all outputs
+            nparam = 4  # number of uncertain parameters
+            folder = '/home/dbrizard/Calcul/25_car/GSA/car_v223_right-impact_v30_prob4/'
+            file = os.path.join(folder, 'morris_n%i_output.md'%ntraj)
+            NREP = {5:6, 10:1, 20:1}  # number of repetitions of the morris analysis wrt number of trajectories
+            nrep = NREP[ntraj]
+            ffolder = 'GSA/car_v223_right-impact_v30_prob4/gathermorris_n%i/'%ntraj  # folder for saving fig output            
                 
 
-        folder = 'GSA/car_v223_right-impact_v30/gathermorris/'  # folder for saving csv output
         out = ['fmax', 'dmax', 'vfin', 'IE']
         GM = []
         for outt, of in zip(out, offset):

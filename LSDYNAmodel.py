@@ -726,7 +726,7 @@ if __name__=="__main__":
     if True:
         CAR = CAR6model('./lsopt_car6_v3/main_v223.k')
         # CAR.run(compute=True)
-        CAR.runGSA(N=5, meth='morris', prob=4, compute=True)
+        CAR.runGSA(N=10, meth='morris', prob=4, compute=True)
         CAR.plotGSAmorris()
         CAR.plotXYvalues()
 
