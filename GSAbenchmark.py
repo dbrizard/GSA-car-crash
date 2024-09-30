@@ -45,14 +45,96 @@ class MorrisOutput(MorrisResults):
         self.param = rd['names']
 
 
+class Ishigami:
+    """A class to handle Ishigami analytical results for Sobol' indices
+    
+    Equations are given in UQTestFuns documentation
+    https://uqtestfuns.readthedocs.io/en/latest/test-functions/ishigami.html#test-functions-ishigami
+    """
+    def __init__(self, a=7, b=0.05):
+        """
+        
+        :param float a:
+        :param float b:
+        """
+        self.param = {'a':a, 'b':b}
+        
+        pi4 = np.pi**4
+        pi8 = pi4*pi4
+        a2 = a*a
+        b2 = b*b
+        
+        # Compute mean and variance of Ishigami function
+        E = a/2
+        V = a2/8 + b*pi4/5 + b2*pi8/18 + 0.5
+        
+        self.sobol = {}
+        # Compute Sobol' indices
+        ## Main effect (First order)
+        V1 = 0.5*(1 + b*pi4/5)**2  # Partial variances
+        V2 = a2/8
+        V3 = 0
+        self.sobol['Si'] = [V1/V, V2/V, V3/V]
+        ## Total-effect Sobol’ indices
+        VT1 = 0.5*(1 + b*pi4/5)**2 + 8*b2*pi8/225
+        VT2 = a2/8
+        VT3 = 8*b2*pi8/225
+        self.sobol['STi'] = [VT1/V, VT2/V, VT3/V]
+
+      
+
+class Sobol_G:
+    """A class to handle Sobol_G analytical results for Sobol indices
+    
+    Equations are given in
+    
+    Azzini, I., & Rosati, R. (2022). 
+    A function dataset for benchmarking in sensitivity analysis. 
+    Data in Brief, 42, 108071. https://doi.org/10.1016/j.dib.2022.108071
+    """
+    def __init__(self, a):
+        """
+        
+        :param array a:
+        """        
+        def computeMainTotalEffects(ii, a):
+            # Compute main effect
+            num_Si = 1/(3*(1+a[ii])**2)
+            temp = 1 + 1/(3*(1+a)**2)
+            den = np.prod( temp ) -1
+            Si = num_Si/den
+            # Compute total effect
+            tempi = 1 + 1/(3*(1+np.delete(a, ii))**2)
+            num_STi = num_Si * np.prod( tempi )
+            STi = num_STi/den
+            return Si, STi
+        
+        Si = []
+        STi = []
+        for ii, aa in enumerate(a):
+            aa, bb = computeMainTotalEffects(ii, a)
+            Si.append(aa)
+            STi.append(bb)
+        
+        self.param = {'a':a}
+        self.sobol = {'Si':Si, 'STi':STi}
+
+        
+
 if __name__=="__main__":
     plt.close('all')
 
+    #%% TEST ISHIGAMI AND SOBOL CLASSES
+    if True:
+        Ish = Ishigami()
+        a = uqtf.SobolG(spatial_dimension=6).parameters
+        Sob = Sobol_G(a)
+        
 
     #%% REPEAT MORRIS ANALYSIS
     if True:
         # Choose benchmark functino here
-        funcname = 'BratleyB'        
+        funcname = 'Sobol_G'        
         nTraj = 20  # number of trajectories for the Morris analysis
         nRep = 100  # number of repetitions of the Morris analyses
         
