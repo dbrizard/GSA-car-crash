@@ -9,7 +9,7 @@ This code was developped using Python 3.6.8 and the following modules:
 - Matplotlib 3.36.2
 - SALib 1.3.11
 - openturns 1.19.post1
-- dynareadout 23.10.2
+- dynareadout 23.10.2 **Not available any more. Can be replaced by *lasso-python* with just a few modifactions (not yet)**
 
 LS-DYNA executable is `ls-dyna_smp_s_r1010_x64_redhat5_ifort160`. 
 

@@ -1,6 +1,6 @@
 *KEYWORD
 *PARAMETER
-rtbumper,3.33333,rtrailb,3,rtrailf,5.66667,ryrailf,366.667
+rtbumper,3.45385,rtrailb,1.53156,rtrailf,5.72649,ryrailf,473.255
 rtgrill,1,rthood,1,rybumper,400,ryrailb,400
 rybody,400
 *INCLUDE

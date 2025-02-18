@@ -495,7 +495,7 @@ if __name__=="__main__":
             nparam = 4  # number of uncertain parameters
             folder = '/home/dbrizard/Calcul/25_car/GSA/car_v223_right-impact_v30_prob4/'
             file = os.path.join(folder, 'morris_n%i_output.md'%ntraj)
-            NREP = {5:6, 10:1, 20:1}  # number of repetitions of the morris analysis wrt number of trajectories
+            NREP = {5:6, 10:6, 20:3}  # number of repetitions of the morris analysis wrt number of trajectories
             nrep = NREP[ntraj]
             ffolder = 'GSA/car_v223_right-impact_v30_prob4/gathermorris_n%i/'%ntraj  # folder for saving fig output            
                 

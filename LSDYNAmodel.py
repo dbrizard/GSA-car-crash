@@ -723,7 +723,7 @@ if __name__=="__main__":
     
     
     #%% RUN MORRIS GSA
-    if True:
+    if False:
         CAR = CAR6model('./lsopt_car6_v3/main_v223.k')
         # CAR.run(compute=True)
         CAR.runGSA(N=20, meth='morris', prob=4, compute=True)
@@ -731,7 +731,7 @@ if __name__=="__main__":
         CAR.plotXYvalues()
 
     #%% RUN LHS DOE FOR PCE SOBOL
-    if False:
+    if True:
         CAR = CAR6model('./lsopt_car6_v3/main_v223.k')
-        CAR.runGSA(N=50, meth='lhs', compute=True)
-        CAR.saveGSA('LHS_50', meth='lhs')
+        CAR.runGSA(N=100, meth='lhs', prob=4, compute=True)
+        CAR.saveGSA('LHS-100', meth='lhs')

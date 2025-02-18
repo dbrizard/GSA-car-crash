@@ -84,21 +84,29 @@ class OpenTurnsPCESobol():
     
     """
     
-    def __init__(self, basepath='LHS/LHS-', ns=120):
+    def __init__(self, basepath='LHS/9param/LHS-', ns=120, prob=9):
         """Set the problem, inputs and outputs
         
         :param str basepath: base path for the input and output files
         :param int ns: number of samples in the LHS DOE
         """
         mm, mpa = 'mm', 'MPa'
-        problem = {'names': ['tbumper', 'trailb', 'trailf', 'tgrill', 'thood',
-                             'ybumper', 'yrailf', 'yrailb', 'ybody'],
-                   'units': [mm, mm, mm, mm, mm,
-                             mpa, mpa, mpa, mpa],
-                   'num_vars': 9,
-                   'bounds': [[2, 4], [1,3], [3,7], [0.5,1.5], [0.5, 1.5],
-                              [300, 500], [300, 500], [300, 500], [300, 500]],
-                   }
+        if prob==9:
+            # problem with 9 uncertain parameters
+            problem = {'names': ['tbumper', 'trailb', 'trailf', 'tgrill', 'thood',
+                                 'ybumper', 'yrailf', 'yrailb', 'ybody'],
+                       'units': [mm]*5 + [mpa]*4,
+                       'num_vars': 9,
+                       'bounds': [[2, 4], [1,3], [3,7], [0.5,1.5], [0.5, 1.5],
+                                  [300, 500], [300, 500], [300, 500], [300, 500]],
+                       }
+        elif prob==4:
+            # toy car crash problem with 4 uncertain parameters
+            problem = {'names': ['tbumper', 'trailb', 'trailf', 'yrailf'],
+                       'units': [mm]*3 + [mpa],
+                       'num_vars':4,
+                       'bounds': [[2,4], [1,3], [3,7], [300,500]]}
+                
         
         self.problem = problem
         self.input = problem['names']
@@ -261,7 +269,7 @@ class OpenTurnsPCESobol():
         :param str method: plotting method ('OT' for OpenTURNS, otherwise mine)
         :param float xmargin: left and right margin around x axis
         :param float xoffset: additionnal x offset (for overlay purpose)
-        :param float xSTS1: x offset between ST and S1
+        :param float xST1: x offset between ST and S1
         """
         for oo in self.output:
             fo_sample = self.bootstrap['FO'][oo]
@@ -446,47 +454,58 @@ if __name__=='__main__':
     plt.close('all')
     
     #%% Plot Eric's results
-    if True:
+    if False:
         Eric = EricPCESobol()
         Eric.plotS1ST(figname='S1ST')
 
 
-    #%% Openturns on LS-DYNA car simulation data
-    bs = 500
-    if True:
-        OTS50 = OpenTurnsPCESobol(ns=50)
-        OTS50.computeChaosSensitivity()
-        OTS50.plotS1ST(figname='S1ST', color='C0', label='LHS-50')
-        # OTS50.plotRanking(figname='sobol50')
-        OTS50.computeBootstrapChaosSobolIndices(bs)  # influence de N ???
-        OTS50.plotS1STbootstrap(figname='STS1-50-bs%i'%bs)
-        
-    if True:
-        OTS120 = OpenTurnsPCESobol(ns=120)
-        OTS120.computeChaosSensitivity()
-        OTS120.plotS1ST(figname='S1ST', color='C1', label='LHS-120')
-        # OTS120.plotRanking(figname='sobol120')
+    #%% Openturns on LS-DYNA car simulation data: 9 uncertain parameters
+    if False:
+        bs = 500
+        if True:
+            OTS50 = OpenTurnsPCESobol(ns=50)
+            OTS50.computeChaosSensitivity()
+            OTS50.plotS1ST(figname='S1ST', color='C0', label='LHS-50')
+            # OTS50.plotRanking(figname='sobol50')
+            OTS50.computeBootstrapChaosSobolIndices(bs)  # influence de N ???
+            OTS50.plotS1STbootstrap(figname='STS1-50-bs%i'%bs)
             
-        OTS120.computeBootstrapChaosSobolIndices(bs)  # influence de N ???
-        OTS120.plotS1STbootstrap(figname='STS1-120-bs%i'%bs)
+        if True:
+            OTS120 = OpenTurnsPCESobol(ns=120)
+            OTS120.computeChaosSensitivity()
+            OTS120.plotS1ST(figname='S1ST', color='C1', label='LHS-120')
+            # OTS120.plotRanking(figname='sobol120')
+                
+            OTS120.computeBootstrapChaosSobolIndices(bs)  # influence de N ???
+            OTS120.plotS1STbootstrap(figname='STS1-120-bs%i'%bs)
+    
+        
+        if True:
+            OTS330 = OpenTurnsPCESobol(ns=330)
+            OTS330.computeChaosSensitivity()
+            OTS330.plotS1ST(figname='S1ST', color='C2', label='LHS-330')
+            # OTS330.plotRanking(figname='sobol330')
+                
+            OTS330.computeBootstrapChaosSobolIndices(bs)  # influence de N ???
+            OTS330.plotS1STbootstrap(figname='STS1-330-bs%i'%bs)
+            # TODO: metamodel quality
+        
+        if True:
+            OTS50.plotS1STbootstrap( figname='STS1-50-120-330_bs%i'%bs, labelsuffix='-50', xST1=0.07)
+            OTS120.plotS1STbootstrap(figname='STS1-50-120-330_bs%i'%bs, labelsuffix='-120', xST1=0.07, xoffset=0.2)
+            OTS330.plotS1STbootstrap(figname='STS1-50-120-330_bs%i'%bs, labelsuffix='-330', xST1=0.07, xoffset=0.4)
+            
+        
+    #%% Openturns on LS-DYNA car simulation data: 4 uncertain parameters
+    if True:
+        bs = 500
+        S100 = OpenTurnsPCESobol(basepath='LHS/4param/LHS-', ns=100, prob=4)
+        S100.computeChaosSensitivity()
+        S100.plotS1ST(figname='S1ST', label='LHS-100')
+        S100.computeBootstrapChaosSobolIndices(bs)
+        S100.plotS1STbootstrap(figname='S1ST-100_bs%i'%bs, labelsuffix='-100')
+        
 
-    
-    if True:
-        OTS330 = OpenTurnsPCESobol(ns=330)
-        OTS330.computeChaosSensitivity()
-        OTS330.plotS1ST(figname='S1ST', color='C2', label='LHS-330')
-        # OTS330.plotRanking(figname='sobol330')
-            
-        OTS330.computeBootstrapChaosSobolIndices(bs)  # influence de N ???
-        OTS330.plotS1STbootstrap(figname='STS1-330-bs%i'%bs)
-        # TODO: metamodel quality
-    
-    if True:
-        OTS50.plotS1STbootstrap( figname='STS1-50-120-330_bs%i'%bs, labelsuffix='-50', xST1=0.07)
-        OTS120.plotS1STbootstrap(figname='STS1-50-120-330_bs%i'%bs, labelsuffix='-120', xST1=0.07, xoffset=0.2)
-        OTS330.plotS1STbootstrap(figname='STS1-50-120-330_bs%i'%bs, labelsuffix='-330', xST1=0.07, xoffset=0.4)
-        
-    
     #%% Openturns example
     if False:
         """https://openturns.github.io/openturns/latest/auto_meta_modeling/polynomial_chaos_metamodel/plot_functional_chaos.html#sphx-glr-auto-meta-modeling-polynomial-chaos-metamodel-plot-functional-chaos-py
