@@ -26,7 +26,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import ticker
 # from matplotlib import pylab as plt
-import openturns as ot
+import openturns as ot  # ot.__version__ => '1.19.post1' before, now 1.24 installed via yum.
+import openturns.experimental as otexp
 import openturns.viewer as viewer
 ot.Log.Show(ot.Log.NONE)
 
@@ -121,6 +122,7 @@ class OpenTurnsPCESobol():
 
         # OpenTURNS variables and definitions 
         ot.ResourceMap.SetAsUnsignedInteger("FittingTest-LillieforsMaximumSamplingSize", 100)
+        ot.ResourceMap.SetAsBool("FunctionalChaosValidation-ModelSelection", True)
         self.inputSample = ot.Sample(self.X)
         self.inputSample.setDescription(self.input)
         self.outputSample = {}
@@ -141,11 +143,12 @@ class OpenTurnsPCESobol():
         """
         self.chaosSI = {}
         self.metamodel = {}
+        self.validation = {}
         self.S1 = {}
         self.ST = {}
         for oo in self.output:
             print('='*20, oo, '='*20, '\n')
-            self.S1[oo], self.ST[oo] = self._computeChaosSensitivity(self.inputSample, self.outputSample[oo], strategy=strategy, q=q, verbose=False)
+            self._computeChaosSensitivity(self.inputSample, self.outputSample[oo], strategy=strategy, q=q, verbose=False)
             
     
     def _computeChaosSensitivity(self, inputSample, outputSample, 
@@ -198,17 +201,26 @@ class OpenTurnsPCESobol():
         result = algo.getResult()
         self.metamodel[oo] = result.getMetaModel()
         
+        # SOBOL INDICES
         self.chaosSI[oo] = ot.FunctionalChaosSobolIndices(result)
         if verbose:
             print(self.chaosSI[oo].summary())
     
         S1 = [self.chaosSI[oo].getSobolIndex(ii) for ii in range(len(self.input))]
         ST = [self.chaosSI[oo].getSobolTotalIndex(ii) for ii in range(len(self.input))]
-        return S1, ST
+        self.S1[oo] = S1
+        self.ST[oo] = ST
     
         # XXX Metamodel validation
         # val = ot.MetaModelValidation(X_test, Y_test, metamodel)
         # https://openturns.github.io/openturns/latest/auto_meta_modeling/polynomial_chaos_metamodel/plot_chaos_sobol_confidence.html#sphx-glr-auto-meta-modeling-polynomial-chaos-metamodel-plot-chaos-sobol-confidence-py
+        
+        # VALIDATION
+        splitterLOO = ot.LeaveOneOutSplitter(len(inputSample))
+        validation = otexp.FunctionalChaosValidation(result, splitterLOO)
+        r2Score = validation.computeR2Score()
+        print('R2 = ', r2Score[0])
+        self.validation[oo] = validation
 
 
     def computeBootstrapChaosSobolIndices(self, bootstrap_size, pick=False, verbose=True):
@@ -485,7 +497,8 @@ if __name__=='__main__':
             OTS330.computeChaosSensitivity()
             OTS330.plotS1ST(figname='S1ST', color='C2', label='LHS-330')
             # OTS330.plotRanking(figname='sobol330')
-                
+            # OTS330.validation['vfin'].drawValidation()
+             
             OTS330.computeBootstrapChaosSobolIndices(bs)  # influence de N ???
             OTS330.plotS1STbootstrap(figname='STS1-330-bs%i'%bs)
             # TODO: metamodel quality

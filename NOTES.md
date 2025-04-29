@@ -53,3 +53,12 @@ Did not install `pyapprox` as it requires `torch` and is very heavy in memory (t
 ## 25/09/2024
 Number of interesting functions in `UQTestFuns` is limited if I only want uniform distribution inputs.
 16 GSA related functions. 
+
+## 29/04/2025
+OT was updated from 1.19 to 1.24 for metamodel validation (following SAMO 2025 conversation).
+
+**WARNING** I think bootstrap of Sobol indices was broken with the update.
+
+* [ ] try PCE metamodel with 1000 QMC samples (should be better than LHS!)
+  + use LowDiscrepancyExperiment (suite de Sobol)
+* [ ] try Morris analysis with Openturns (otmorris)
