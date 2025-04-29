@@ -13,6 +13,8 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
+import figutils as fu  # only to save figures
+
 
 class SobolIndices:
     """
@@ -335,11 +337,15 @@ class GatherMorris:
         #     plt.plot(X, sigma)
 
 
-    def plot2D(self, figname=None, conf=True, pointID=True, xlim0=True):
+    def plot2D(self, figname=None, conf=True, pointID=True, xlim0=True, xlim=None, ylim=None):
         """Gather sigma vs mu_star plots for all the values of param
         
         :param str figname: name for the figure
         :param bool conf: plot confidence intervals
+        :param bool pointID: 
+        :param bool xlim0: 
+        :param float xlim:
+        :param float ylim: 
         """
         plt.figure(figname)
         plt.title(self.outname)
@@ -362,19 +368,25 @@ class GatherMorris:
         plt.ylabel('$\\sigma$')
         if xlim0:
             plt.xlim(xmin=0)
-        
+        plt.xlim(xmax=xlim)
+        plt.ylim(ymax=ylim)
     
-    def subplot2D(self, figname=None, figsize=(19.2, 4.8), conf=False, margin=1.05):
+    def subplot2D(self, figname=None, figsize=(19.2, 4.8), conf=False, margin=1.05,
+                  xlim=None, ylim=None):
         """Plot all the sigma vs mu_star plots with subplot
         
         :param str figname: name for the figure
+        :param tupple figsize: (width, height) of the firure
         :param bool conf: plot confidence intervals
+        :param float margin: margin for x and y lim
         """
         plt.figure(figname, figsize=figsize)
         for ii, MO in enumerate(self.MOlist):
             # determine xlim and ylim
-            xlim = margin*self.mu_star.max()
-            ylim = margin*self.sigma.max()
+            if xlim is None:
+                xlim = margin*self.mu_star.max()
+            if ylim is None:
+                ylim = margin*self.sigma.max()
             # plot Morris graphs
             plt.subplot(1,len(self.MOlist),ii+1)
             MO.plotMorris_color(conf=conf, nofig=True, xlim=(0, xlim), ylim=(0, ylim))
@@ -465,8 +477,8 @@ if __name__=="__main__":
     
     # %% Morris n5, n10 and n20 repetitions
     if True:
-        ntraj = 5
-        model = 'v223_4'
+        ntraj = 20
+        model = 'v223'
         if model=='v222':
             # OLD MODEL
             offset = [0, 9, 18, 27]  # offset to fecht results for each output variable
@@ -487,7 +499,9 @@ if __name__=="__main__":
             file = os.path.join(folder, 'morris_n%i_output.md'%ntraj)
             NREP = {5:6, 10:6, 20:6}  # number of repetitions of the morris analysis wrt number of trajectories
             nrep = NREP[ntraj]
-            ffolder = 'GSA/car_v223_right-impact_v30/gathermorris/'  # folder for saving fig output
+            ffolder = 'GSA/car_v223_right-impact_v30/gathermorris_n%i/'%ntraj  # folder for saving fig output
+            xlim = {'dmax':None, 'fmax':700000, 'IE':9e6, 'vfin':1700}
+            ylim = {'dmax':None, 'fmax':370000, 'IE':7.5e6, 'vfin':900}
         elif model=='v223_4':
             # CURRENT MODEL but 4 param instead of 9
             offset = [0, 7, 14, 21]  # offset to fecht results for each output variable
@@ -495,9 +509,11 @@ if __name__=="__main__":
             nparam = 4  # number of uncertain parameters
             folder = '/home/dbrizard/Calcul/25_car/GSA/car_v223_right-impact_v30_prob4/'
             file = os.path.join(folder, 'morris_n%i_output.md'%ntraj)
-            NREP = {5:6, 10:6, 20:3}  # number of repetitions of the morris analysis wrt number of trajectories
+            NREP = {5:6, 10:6, 20:6}  # number of repetitions of the morris analysis wrt number of trajectories
             nrep = NREP[ntraj]
             ffolder = 'GSA/car_v223_right-impact_v30_prob4/gathermorris_n%i/'%ntraj  # folder for saving fig output            
+            xlim = {'dmax':None, 'fmax':700000, 'IE':8.5e6, 'vfin':1800}
+            ylim = {'dmax':None, 'fmax':510000, 'IE':7e6, 'vfin':1100}
                 
 
         out = ['fmax', 'dmax', 'vfin', 'IE']
@@ -509,7 +525,10 @@ if __name__=="__main__":
                 MOlist.append(mo1)
             
             MO = GatherMorris(MOlist, 'rep', [ii for ii in range(len(MOlist))], outt)
-            MO.plot2D(figname='morris_%i_%s'%(ntraj, outt))
-            MO.subplot2D(figname='smorris_%i_%s'%(ntraj, outt))
+            MO.plot2D(figname='morris_%i_%s'%(ntraj, outt), conf=False, xlim=xlim[outt], ylim=ylim[outt])
+            MO.subplot2D(figname='smorris_%i_%s'%(ntraj, outt), xlim=xlim[outt], ylim=ylim[outt])
             MO.plotRanking(figname='rank_%i_%s'%(ntraj, outt), title='r=%i'%ntraj)
             GM.append(MO)
+        
+        if True:
+            fu.savefigs(ffolder, overw=True)

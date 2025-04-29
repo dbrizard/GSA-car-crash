@@ -733,5 +733,5 @@ if __name__=="__main__":
     #%% RUN LHS DOE FOR PCE SOBOL
     if True:
         CAR = CAR6model('./lsopt_car6_v3/main_v223.k')
-        CAR.runGSA(N=100, meth='lhs', prob=4, compute=True)
-        CAR.saveGSA('LHS-100', meth='lhs')
+        CAR.runGSA(N=200, meth='lhs', prob=4, compute=True)
+        CAR.saveGSA('LHS-200', meth='lhs')

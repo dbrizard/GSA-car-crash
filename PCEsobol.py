@@ -499,11 +499,25 @@ if __name__=='__main__':
     #%% Openturns on LS-DYNA car simulation data: 4 uncertain parameters
     if True:
         bs = 500
-        S100 = OpenTurnsPCESobol(basepath='LHS/4param/LHS-', ns=100, prob=4)
-        S100.computeChaosSensitivity()
-        S100.plotS1ST(figname='S1ST', label='LHS-100')
-        S100.computeBootstrapChaosSobolIndices(bs)
-        S100.plotS1STbootstrap(figname='S1ST-100_bs%i'%bs, labelsuffix='-100')
+        if False:
+            S100 = OpenTurnsPCESobol(basepath='LHS/4param/LHS-', ns=100, prob=4)
+            S100.computeChaosSensitivity()
+            S100.plotS1ST(figname='S1ST', label='LHS-100')
+            S100.computeBootstrapChaosSobolIndices(bs)
+            S100.plotS1STbootstrap(figname='S1ST-100_bs%i'%bs, labelsuffix='-100')
+        
+        if True:
+            S200 = OpenTurnsPCESobol(basepath='LHS/4param/LHS-', ns=200, prob=4)
+            S200.computeChaosSensitivity()
+            S200.plotS1ST(figname='S1ST', label='LHS-200')
+            S200.computeBootstrapChaosSobolIndices(bs)
+            S200.plotS1STbootstrap(figname='S1ST-200_bs%i'%bs, labelsuffix='-200')
+            S200.plotRanking(figname='sobol200')
+        
+        if False:
+            S100.plotS1STbootstrap(figname='S1ST-100-200_bs%i'%bs, labelsuffix='-100', xST1=0.07)
+            S200.plotS1STbootstrap(figname='S1ST-100-200_bs%i'%bs, labelsuffix='-200', xST1=0.07, xoffset=0.2, xmargin=0.3)
+
         
 
     #%% Openturns example

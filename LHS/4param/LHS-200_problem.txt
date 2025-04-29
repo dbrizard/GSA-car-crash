@@ -1,0 +1,2 @@
+{'names': ['tbumper', 'trailb', 'trailf', 'yrailf'], 'units': ['mm', 'mm', 'mm', 'MPa'], 'num_vars': 4, 'bounds': [[2, 4], [1, 3], [3, 7], [300, 500]]}
+{'basename': 'main_v223.k', 'dirname': '/home/dbrizard/Calcul/25_car/lsopt_car6_v3', 'abspath': '/home/dbrizard/Calcul/25_car/lsopt_car6_v3/main_v223.k', 'include': 'car6_crash_v223.k', 'paramfile': '/home/dbrizard/Calcul/25_car/lsopt_car6_v3/main_v223_param.k'}
