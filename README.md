@@ -1,4 +1,4 @@
-# Car crashworthiness global sensitivity analysis for USD 2024 
+# Car crashworthiness global sensitivity analysis: Morris Analysis vs PCE and Sobol indices
 
 
 ## Prerequisites
