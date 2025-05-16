@@ -92,6 +92,7 @@ class OpenTurnsPCESobol():
         :param int ns: number of samples in the LHS DOE
         """
         mm, mpa = 'mm', 'MPa'
+        car_output = ('dmax', 'fmax', 'IE', 'vfin')
         if prob==9:
             # problem with 9 uncertain parameters
             problem = {'names': ['tbumper', 'trailb', 'trailf', 'tgrill', 'thood',
@@ -101,24 +102,44 @@ class OpenTurnsPCESobol():
                        'bounds': [[2, 4], [1,3], [3,7], [0.5,1.5], [0.5, 1.5],
                                   [300, 500], [300, 500], [300, 500], [300, 500]],
                        }
+            output = car_output
         elif prob==4:
             # toy car crash problem with 4 uncertain parameters
             problem = {'names': ['tbumper', 'trailb', 'trailf', 'yrailf'],
                        'units': [mm]*3 + [mpa],
                        'num_vars':4,
                        'bounds': [[2,4], [1,3], [3,7], [300,500]]}
-                
+            output = car_output
+        elif prob==110:
+            # Wood barriere problem (Nyobe PhD)
+            lbound = [30555.56, 0.001, 19, 9, 4.4e-10, 5, 194, 96, 194, 243]
+            ubound = [32694.44, 0.075, 21.5, 20, 7.1e-10, 20, 208, 106, 208, 259]
+            
+            problem = {'names':['VIV', 'AJM', 'ANI', 'TEE', 'DEN', 'TEM', 
+                                'POX', 'POY', 'LIY', 'LIZ'],
+                       'units':[],
+                       'dyna_names': ['speed', 'addmass', 'beta', 'mois', 'rho', 'temp',
+                                      'postx', 'posty', 'beamy', 'beamz'],  
+                       'num_vars':10,
+                       'bounds':[(lb, ub) for lb,ub in zip(lbound, ubound)]}
+            output = ('ASI', 'THIV', 'Dm', 'Wm', 
+                      'post1', 'post2', 'post3', 'post4')
         
         self.problem = problem
         self.input = problem['names']
-        self.output = ('dmax', 'fmax', 'IE', 'vfin')
+        self.output = output
         
         # Import X and Y
-        self.X = np.loadtxt('%s%i_X.csv'%(basepath, ns), delimiter=',')
         self.Y = {}
-        for oo in self.output:
-            self.Y[oo] = np.loadtxt('%s%i_Y_%s.csv'%(basepath, ns, oo), delimiter=',')
-        
+        if prob in (9, 4):
+            self.X = np.loadtxt('%s%i_X.csv'%(basepath, ns), delimiter=',')
+            for oo in self.output:
+                self.Y[oo] = np.loadtxt('%s%i_Y_%s.csv'%(basepath, ns, oo), delimiter=',')
+        elif prob==110:
+            self.X = np.loadtxt('%s%i_X.csv'%(basepath, ns), delimiter=';', skiprows=1)
+            Y = np.loadtxt('%s%i_Y.csv'%(basepath, ns), delimiter=';', skiprows=1)
+            for ii, oo in enumerate(self.output):
+                self.Y[oo] = Y[:,ii]
 
         # OpenTURNS variables and definitions 
         ot.ResourceMap.SetAsUnsignedInteger("FittingTest-LillieforsMaximumSamplingSize", 100)
@@ -148,11 +169,12 @@ class OpenTurnsPCESobol():
         self.ST = {}
         for oo in self.output:
             print('='*20, oo, '='*20, '\n')
-            self._computeChaosSensitivity(self.inputSample, self.outputSample[oo], strategy=strategy, q=q, verbose=False)
+            self.S1[oo], self.ST[oo] = self._computeChaosSensitivity(self.inputSample, self.outputSample[oo], strategy=strategy, q=q, verbose=False)
             
     
     def _computeChaosSensitivity(self, inputSample, outputSample, 
-                                 strategy='cleaning', q=0.4, verbose=False):
+                                 strategy='cleaning', q=0.4, verbose=False,
+                                 validation=True):
         """Compute PCE metamodel and return Sobol indices for a specific output
         
         :param Sample inputSample: 
@@ -216,11 +238,14 @@ class OpenTurnsPCESobol():
         # https://openturns.github.io/openturns/latest/auto_meta_modeling/polynomial_chaos_metamodel/plot_chaos_sobol_confidence.html#sphx-glr-auto-meta-modeling-polynomial-chaos-metamodel-plot-chaos-sobol-confidence-py
         
         # VALIDATION
-        splitterLOO = ot.LeaveOneOutSplitter(len(inputSample))
-        validation = otexp.FunctionalChaosValidation(result, splitterLOO)
-        r2Score = validation.computeR2Score()
-        print('R2 = ', r2Score[0])
-        self.validation[oo] = validation
+        if validation:
+            splitterLOO = ot.LeaveOneOutSplitter(len(inputSample))
+            validation = otexp.FunctionalChaosValidation(result, splitterLOO)
+            r2Score = validation.computeR2Score()
+            print('R2 = ', r2Score[0])
+            self.validation[oo] = validation
+            
+        return S1, ST
 
 
     def computeBootstrapChaosSobolIndices(self, bootstrap_size, pick=False, verbose=True):
@@ -252,7 +277,7 @@ class OpenTurnsPCESobol():
                 if verbose and ii%20==0:
                     print('bootstrap %i/%i'%(ii, bootstrap_size))
                 X_boot, Y_boot = multiBootstrap(X, Y)
-                first_order, total_order = self._computeChaosSensitivity(X_boot, Y_boot)
+                first_order, total_order = self._computeChaosSensitivity(X_boot, Y_boot, validation=False)
                 if pick:
                     # do not add to sample if any first_order or total_order is 0.0
                     if unit_eps.contains(first_order) and unit_eps.contains(total_order):
@@ -362,7 +387,16 @@ class OpenTurnsPCESobol():
                              yticks=S1[::-1], xlabel='Sobol S1')
             plotSobolRanking(iST[::-1,np.newaxis], figname=fn+'ST',
                              yticks=ST[::-1], xlabel='Sobol ST')
-       
+      
+    def getR2(self,):
+        """Get R2 validation values for each output
+        
+        """
+        R2 = {}
+        for oo in self.output:
+            R2[oo] = self.validation[oo].computeR2Score()[0]
+        return R2
+
 
 def plotSobolRanking(matrix, figname=None, xlabel=None, yticks=None):
     """
@@ -510,7 +544,7 @@ if __name__=='__main__':
             
         
     #%% Openturns on LS-DYNA car simulation data: 4 uncertain parameters
-    if True:
+    if False:
         bs = 500
         if False:
             S100 = OpenTurnsPCESobol(basepath='LHS/4param/LHS-', ns=100, prob=4)
@@ -531,6 +565,16 @@ if __name__=='__main__':
             S100.plotS1STbootstrap(figname='S1ST-100-200_bs%i'%bs, labelsuffix='-100', xST1=0.07)
             S200.plotS1STbootstrap(figname='S1ST-100-200_bs%i'%bs, labelsuffix='-200', xST1=0.07, xoffset=0.2, xmargin=0.3)
 
+    #%% OpenTURNS Nyobe VRS
+    if True:
+        VRS60 = OpenTurnsPCESobol(basepath='VRS/Sobol-', ns=60, prob=110)
+        VRS60.computeChaosSensitivity()
+        VRS60.plotS1ST(figname='S1ST')
+        
+        # bs= 500
+        # VRS60.computeBootstrapChaosSobolIndices(bs)
+        # VRS60.plotS1STbootstrap(figname='S1ST_bs%i'%bs)
+        
         
 
     #%% Openturns example
