@@ -93,6 +93,7 @@ class OpenTurnsPCESobol():
         """
         mm, mpa = 'mm', 'MPa'
         car_output = ('dmax', 'fmax', 'IE', 'vfin')
+        car_out_unit = ('mm', 'N', '', 'mm/s', 'Nmm')
         if prob==9:
             # problem with 9 uncertain parameters
             problem = {'names': ['tbumper', 'trailb', 'trailf', 'tgrill', 'thood',
@@ -103,6 +104,7 @@ class OpenTurnsPCESobol():
                                   [300, 500], [300, 500], [300, 500], [300, 500]],
                        }
             output = car_output
+            out_units = car_out_unit
         elif prob==4:
             # toy car crash problem with 4 uncertain parameters
             problem = {'names': ['tbumper', 'trailb', 'trailf', 'yrailf'],
@@ -110,6 +112,7 @@ class OpenTurnsPCESobol():
                        'num_vars':4,
                        'bounds': [[2,4], [1,3], [3,7], [300,500]]}
             output = car_output
+            out_units = car_out_unit
         elif prob==110:
             # Wood barriere problem (Nyobe PhD)
             lbound = [30555.56, 0.001, 19, 9, 4.4e-10, 5, 194, 96, 194, 243]
@@ -117,17 +120,19 @@ class OpenTurnsPCESobol():
             
             problem = {'names':['VIV', 'AJM', 'ANI', 'TEE', 'DEN', 'TEM', 
                                 'POX', 'POY', 'LIY', 'LIZ'],
-                       'units':[],
+                       'units':['mm/s', 't', '°', '%', 't/mm3', '°C']+['mm']*4,
                        'dyna_names': ['speed', 'addmass', 'beta', 'mois', 'rho', 'temp',
                                       'postx', 'posty', 'beamy', 'beamz'],  
                        'num_vars':10,
                        'bounds':[(lb, ub) for lb,ub in zip(lbound, ubound)]}
             output = ('ASI', 'THIV', 'Dm', 'Wm', 
                       'post1', 'post2', 'post3', 'post4')
-        
+            out_units = ['-', 'km/h'] + ['mm']*6
+            
         self.problem = problem
         self.input = problem['names']
         self.output = output
+        self.output_units = out_units
         
         # Import X and Y
         self.Y = {}
@@ -387,15 +392,27 @@ class OpenTurnsPCESobol():
                              yticks=S1[::-1], xlabel='Sobol S1')
             plotSobolRanking(iST[::-1,np.newaxis], figname=fn+'ST',
                              yticks=ST[::-1], xlabel='Sobol ST')
-      
+
+
     def getR2(self,):
-        """Get R2 validation values for each output
+        """Get R2 validation values for each output as a dict
         
         """
         R2 = {}
         for oo in self.output:
             R2[oo] = self.validation[oo].computeR2Score()[0]
         return R2
+    
+    def plotValidation(self,):
+        """
+        
+        """
+        R2 = self.getR2()
+        for oo, uu in zip(self.output, self.output_units):
+            graph = self.validation[oo].drawValidation()
+            graph.setTitle('%s /%s [$R^2=%.3f$]'%(oo, uu, R2[oo]))
+            # graph.setXTitle('test')  # XXX AttributeError ???
+            viewer.View(graph, figure_kw={'num':'validation-%s'%oo})
 
 
 def plotSobolRanking(matrix, figname=None, xlabel=None, yticks=None):
@@ -570,6 +587,7 @@ if __name__=='__main__':
         VRS60 = OpenTurnsPCESobol(basepath='VRS/Sobol-', ns=60, prob=110)
         VRS60.computeChaosSensitivity()
         VRS60.plotS1ST(figname='S1ST')
+        VRS60.plotValidation()
         
         # bs= 500
         # VRS60.computeBootstrapChaosSobolIndices(bs)
